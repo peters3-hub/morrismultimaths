@@ -1,0 +1,3235 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+</head>
+<body>
+<title>MMM - Morris Multi Maths</title>
+<style>
+/* =============================================================
+   TOKENS
+   ============================================================= */
+:root{
+  --bg:#f4f7fb; --bg-2:#eef3fb;
+  --card:#ffffff; --card-2:#f8fafc;
+  --ink:#172033; --muted:#667085; --faint:#98a2b3;
+  --line:#dfe5ee;
+  --primary:#2457d6; --primary-dark:#1741a8; --primary-soft:#eef3ff;
+  --success:#198754; --success-soft:#edf9f2;
+  --danger:#c92a2a;  --danger-soft:#fdecec;
+  --warning:#b76e00; --warning-soft:#fff8e7;
+  --bronze-a:#c98a4b; --bronze-b:#8c5a2b;
+  --silver-a:#b9c2d0; --silver-b:#73808f;
+  --gold-a:#e8b93a;   --gold-b:#b3861a;
+  --plat-a:#7fd8d0;   --plat-b:#3d7f9f;
+  --diamond-a:#8fb8ff;--diamond-b:#5571d8;
+  --shadow:0 12px 35px rgba(24,42,72,.09);
+  --shadow-lg:0 24px 60px rgba(24,42,72,.18);
+  --r:20px; --r-sm:12px;
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0d1017; --bg-2:#111624;
+    --card:#161b27; --card-2:#1c2231;
+    --ink:#eef1f7; --muted:#a5adc0; --faint:#7b8398;
+    --line:#28303f;
+    --primary:#7d8dff; --primary-dark:#9aa6ff; --primary-soft:#20243f;
+    --success:#3ddc84; --success-soft:#12301f;
+    --danger:#ff6b6b;  --danger-soft:#331616;
+    --warning:#ffc76b; --warning-soft:#33270f;
+    --shadow:0 12px 35px rgba(0,0,0,.4);
+    --shadow-lg:0 24px 60px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"]{
+    --bg:#0d1017; --bg-2:#111624;
+    --card:#161b27; --card-2:#1c2231;
+    --ink:#eef1f7; --muted:#a5adc0; --faint:#7b8398;
+    --line:#28303f;
+    --primary:#7d8dff; --primary-dark:#9aa6ff; --primary-soft:#20243f;
+    --success:#3ddc84; --success-soft:#12301f;
+    --danger:#ff6b6b;  --danger-soft:#331616;
+    --warning:#ffc76b; --warning-soft:#33270f;
+    --shadow:0 12px 35px rgba(0,0,0,.4);
+    --shadow-lg:0 24px 60px rgba(0,0,0,.6);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:linear-gradient(180deg,var(--bg-2) 0%,var(--bg) 340px);
+  background-attachment:fixed;color:var(--ink);-webkit-font-smoothing:antialiased;line-height:1.5;
+}
+button{font:inherit;color:inherit;cursor:pointer}
+h1,h2,h3{margin:0;letter-spacing:-.02em;line-height:1.25}
+.app{width:min(1140px,calc(100% - 28px));margin:0 auto;padding:22px 0 60px}
+.hide{display:none !important}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* =============================================================
+   CHROME
+   ============================================================= */
+header.top{display:flex;justify-content:space-between;gap:16px;align-items:center;flex-wrap:wrap;margin-bottom:20px}
+.brand h1{font-size:clamp(1.5rem,3.6vw,2.1rem);display:flex;align-items:baseline;gap:.5em;flex-wrap:wrap}
+.brand .wordmark{font-size:.5em;font-weight:600;color:var(--muted);letter-spacing:.01em}
+@media (max-width:420px){ .brand .wordmark{display:none} }
+.brand p{margin:5px 0 0;color:var(--muted);font-size:.92rem}
+.who{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.chip{
+  display:inline-flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);
+  border-radius:999px;padding:8px 14px;box-shadow:var(--shadow);font-size:.88rem;white-space:nowrap;
+}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--faint);flex:0 0 auto}
+.dot.ready{background:var(--success)}
+.dot.listening{background:var(--primary);animation:pulse 1s infinite}
+.dot.error{background:var(--danger)}
+@keyframes pulse{50%{transform:scale(1.35);opacity:.6}}
+nav.tabs{display:flex;gap:5px;padding:5px;border:1px solid var(--line);border-radius:14px;background:var(--card-2);flex-wrap:wrap}
+nav.tabs button{border:0;background:transparent;padding:9px 14px;border-radius:10px;font-weight:700;color:var(--muted);font-size:.92rem}
+nav.tabs button.active{background:var(--card);color:var(--primary-dark);box-shadow:0 2px 8px rgba(0,0,0,.07)}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:22px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+.screen{display:none}
+.screen.active{display:block}
+.stack{display:grid;gap:16px}
+
+/* buttons */
+.btn{border:1px solid var(--line);border-radius:var(--r-sm);background:var(--card);padding:10px 16px;font-weight:700;transition:transform .12s}
+.btn:hover{transform:translateY(-1px)}
+.btn.primary{background:var(--primary);border-color:var(--primary);color:#fff}
+.btn.success{background:var(--success);border-color:var(--success);color:#fff}
+.btn.danger{color:var(--danger)}
+.btn.small{padding:7px 12px;font-size:.86rem;border-radius:10px}
+.btn[disabled]{opacity:.45;pointer-events:none}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row.center{justify-content:center}
+.spacer{flex:1 1 auto}
+
+/* forms */
+.field{display:block;margin-bottom:14px}
+.field label{display:block;font-weight:700;font-size:.88rem;margin-bottom:6px}
+.field .hint{font-weight:400;color:var(--muted);font-size:.82rem;display:block;margin-top:3px}
+input[type=text],input[type=password],input[type=number],select{
+  width:100%;padding:11px 13px;border-radius:var(--r-sm);border:1px solid var(--line);
+  background:var(--card-2);color:var(--ink);font:inherit;
+}
+input:focus,select:focus{outline:2px solid var(--primary);outline-offset:1px}
+.checks-inline{display:flex;gap:14px;flex-wrap:wrap}
+.checks-inline label{display:inline-flex;align-items:center;gap:7px;font-weight:600;font-size:.9rem;
+  background:var(--card-2);border:1px solid var(--line);padding:8px 13px;border-radius:999px;cursor:pointer}
+.checks-inline input{accent-color:var(--primary)}
+
+/* =============================================================
+   LEVEL CARDS
+   ============================================================= */
+.levels{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:18px}
+.level{border:2px solid var(--line);background:var(--card);border-radius:16px;padding:13px;text-align:left;transition:.2s}
+.level:hover{transform:translateY(-1px)}
+.level.active{border-color:var(--primary);box-shadow:0 8px 22px rgba(36,87,214,.16)}
+.level.locked{opacity:.5;cursor:not-allowed}
+.level-name{font-weight:800;display:flex;align-items:center;gap:7px}
+.pip{width:13px;height:13px;border-radius:50%;display:inline-block;flex:0 0 auto}
+.pip.bronze{background:linear-gradient(140deg,var(--bronze-a),var(--bronze-b))}
+.pip.silver{background:linear-gradient(140deg,var(--silver-a),var(--silver-b))}
+.pip.gold{background:linear-gradient(140deg,var(--gold-a),var(--gold-b))}
+.pip.platinum{background:linear-gradient(140deg,var(--plat-a),var(--plat-b))}
+.pip.diamond{background:linear-gradient(140deg,var(--diamond-a),var(--diamond-b))}
+.level-tables{color:var(--muted);font-size:.83rem;display:block;margin-top:4px}
+.level-progress{margin-top:10px;height:6px;border-radius:999px;background:var(--card-2);border:1px solid var(--line);overflow:hidden}
+.level-progress span{display:block;height:100%;width:0;background:var(--primary);transition:width .3s}
+.badge{display:inline-block;margin-top:8px;padding:3px 8px;border-radius:999px;font-size:.7rem;font-weight:800;letter-spacing:.03em;
+  background:var(--primary-soft);color:var(--primary-dark)}
+.badge.ok{background:var(--success-soft);color:var(--success)}
+.badge.mute{background:var(--card-2);color:var(--faint)}
+.badge.warn{background:var(--warning-soft);color:var(--warning)}
+
+/* =============================================================
+   EXERCISE STAGE
+   ============================================================= */
+.main-card{padding:clamp(20px,4vw,36px);min-height:520px;display:flex;flex-direction:column;justify-content:center}
+.mode-row{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:24px;flex-wrap:wrap}
+.readiness{padding:11px 15px;border-radius:13px;background:var(--warning-soft);color:var(--warning);
+  border:1px solid transparent;font-size:.88rem;font-weight:600}
+.readiness.ready{background:var(--success-soft);color:var(--success)}
+.eyebrow{color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:.74rem;text-align:center}
+.equation{text-align:center;font-size:clamp(3.2rem,11vw,6.2rem);line-height:1;font-weight:900;letter-spacing:-.05em;margin:18px 0 12px;font-variant-numeric:tabular-nums}
+.equation .op{color:var(--faint)}
+.equation .q{color:var(--primary)}
+.prompt{text-align:center;color:var(--muted);font-size:1rem;margin-bottom:20px;min-height:24px}
+
+.mic-shell{position:relative;width:152px;height:152px;margin:0 auto 14px;display:grid;place-items:center}
+.ring{position:absolute;inset:0;width:152px;height:152px;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:9;stroke-linecap:round}
+.ring .track{stroke:var(--line)}
+.ring .prog{stroke:var(--primary);stroke-dashoffset:0;transition:stroke .3s}
+.ring.warn .prog{stroke:var(--warning)}
+.ring.crit .prog{stroke:var(--danger)}
+.mic{width:104px;height:104px;border-radius:50%;border:0;background:var(--primary);color:#fff;font-size:2.5rem;
+  box-shadow:0 12px 28px rgba(36,87,214,.28);transition:.2s;display:grid;place-items:center}
+.mic:hover{background:var(--primary-dark);transform:scale(1.03)}
+.mic.listening{background:#173fa4;animation:pulseMic 1s infinite}
+.mic.err{background:var(--danger)}
+.mic[disabled]{opacity:.55;cursor:not-allowed}
+@keyframes pulseMic{50%{box-shadow:0 0 0 16px rgba(36,87,214,.12),0 12px 28px rgba(36,87,214,.28)}}
+.clock{position:absolute;bottom:-2px;right:2px;background:var(--card);border:1px solid var(--line);border-radius:999px;
+  min-width:40px;padding:3px 10px;text-align:center;font-weight:800;font-variant-numeric:tabular-nums;font-size:.95rem;box-shadow:var(--shadow)}
+.clock.crit{background:var(--danger);color:#fff;border-color:transparent}
+
+.transcript{min-height:30px;text-align:center;color:var(--muted);margin-bottom:10px}
+.transcript b{color:var(--ink)}
+.feedback{min-height:56px;text-align:center;font-weight:800;font-size:1.1rem}
+.feedback.correct{color:var(--success)}
+.feedback.incorrect{color:var(--danger)}
+.feedback.info{color:var(--primary-dark)}
+
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px}
+.stat{background:var(--card-2);border:1px solid var(--line);border-radius:14px;padding:12px;text-align:center}
+.stat strong{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums}
+.stat span{color:var(--muted);font-size:.76rem}
+
+/* single-table picker */
+.table-picker{
+  border:1px solid var(--line);background:var(--card-2);border-radius:16px;
+  padding:14px 16px;margin-bottom:20px;display:grid;gap:12px;
+}
+.tp-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.tp-label{font-size:.76rem;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);min-width:52px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip-btn{
+  border:1px solid var(--line);background:var(--card);border-radius:10px;
+  padding:7px 12px;font-weight:750;font-size:.9rem;font-variant-numeric:tabular-nums;
+  display:inline-flex;align-items:center;gap:6px;transition:.15s;
+}
+.chip-btn:hover{transform:translateY(-1px)}
+.chip-btn.on{background:var(--primary);border-color:var(--primary);color:#fff}
+.chip-btn.on .pip{box-shadow:0 0 0 2px rgba(255,255,255,.6)}
+.chip-btn .pip{width:9px;height:9px}
+.table-strip{display:flex;gap:5px;flex-wrap:wrap}
+.table-strip i{
+  width:30px;height:26px;border-radius:7px;border:1px solid var(--line);background:var(--card);
+  display:grid;place-items:center;font-size:.76rem;font-weight:700;font-style:normal;
+  color:var(--faint);font-variant-numeric:tabular-nums;
+}
+.table-strip i.ok{background:var(--success);border-color:transparent;color:#fff}
+.table-strip i.no{background:var(--danger-soft);border-color:transparent;color:var(--danger)}
+.table-strip i.now{border-color:var(--primary);color:var(--primary);box-shadow:0 0 0 2px var(--primary-soft)}
+
+/* keypad */
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:250px;margin:6px auto 0}
+.keypad button{padding:13px 0;border-radius:12px;border:1px solid var(--line);background:var(--card);
+  font-size:1.2rem;font-weight:700;font-variant-numeric:tabular-nums}
+.keypad button.act{font-size:.9rem}
+.typed{font-size:2rem;font-weight:800;min-height:40px;display:grid;place-items:center;color:var(--primary);font-variant-numeric:tabular-nums}
+.collapsible{display:none}
+.collapsible.open{display:block}
+.dots{display:flex;gap:4px;flex-wrap:wrap;justify-content:center;margin-top:14px}
+.dots i{width:8px;height:8px;border-radius:50%;background:var(--line)}
+.dots i.ok{background:var(--success)}
+.dots i.no{background:var(--danger)}
+.dots i.now{background:var(--ink);transform:scale(1.3)}
+
+/* =============================================================
+   PROGRESS / TABLES / DASHBOARD
+   ============================================================= */
+.line{height:10px;background:var(--card-2);border:1px solid var(--line);border-radius:999px;overflow:hidden;margin:9px 0 12px}
+.line span{display:block;height:100%;background:var(--primary);transition:width .3s}
+.line.ok span{background:var(--success)}
+.line.warn span{background:var(--warning)}
+.note{color:var(--muted);font-size:.9rem;line-height:1.55}
+.note p{margin:0 0 9px}
+.streak-dots{display:inline-flex;gap:5px}
+.streak-dots i{width:12px;height:12px;border-radius:50%;border:2px solid var(--line);background:var(--card-2)}
+.streak-dots i.on{background:var(--success);border-color:transparent}
+
+table.data{width:100%;border-collapse:collapse;font-size:.9rem}
+table.data th{text-align:left;color:var(--muted);font-size:.76rem;text-transform:uppercase;letter-spacing:.05em;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+table.data td{padding:10px;border-bottom:1px solid var(--line);vertical-align:middle}
+table.data tr:last-child td{border-bottom:0}
+table.data tbody tr:hover{background:var(--card-2)}
+.tbl-wrap{overflow-x:auto}
+.heat{overflow-x:auto;margin-top:10px}
+.heat table{border-collapse:separate;border-spacing:3px;font-size:.75rem}
+.heat th{color:var(--faint);font-weight:600;padding:2px 4px}
+.heat td{width:32px;height:29px;text-align:center;border-radius:7px;background:var(--card-2);border:1px solid var(--line);color:var(--faint);font-weight:600}
+.heat td.s1{background:var(--danger-soft);color:var(--danger);border-color:transparent}
+.heat td.s2{background:var(--warning-soft);color:var(--warning);border-color:transparent}
+.heat td.s3{background:var(--success-soft);color:var(--success);border-color:transparent}
+.heat td.s4{background:var(--success);color:#fff;border-color:transparent}
+.legend{display:flex;gap:13px;flex-wrap:wrap;font-size:.78rem;color:var(--muted);margin-top:10px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend b{width:12px;height:12px;border-radius:4px;display:inline-block}
+.capacity{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:12px}
+
+/* auth */
+.auth-wrap{max-width:520px;margin:6vh auto 0}
+.auth-tabs{display:flex;gap:5px;padding:5px;border:1px solid var(--line);border-radius:14px;background:var(--card-2);margin-bottom:20px}
+.auth-tabs button{flex:1;border:0;background:transparent;padding:11px;border-radius:10px;font-weight:700;color:var(--muted)}
+.auth-tabs button.active{background:var(--card);color:var(--primary-dark);box-shadow:0 2px 8px rgba(0,0,0,.07)}
+.name-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;max-height:230px;overflow-y:auto;padding:2px}
+.name-grid button{padding:11px 10px;border-radius:12px;border:1px solid var(--line);background:var(--card);font-weight:650;text-align:left;font-size:.9rem}
+.name-grid button.sel{border-color:var(--primary);background:var(--primary-soft);color:var(--primary-dark)}
+.pin-display{display:flex;gap:10px;justify-content:center;margin:14px 0}
+.pin-display i{width:16px;height:16px;border-radius:50%;border:2px solid var(--line);background:var(--card-2)}
+.pin-display i.on{background:var(--primary);border-color:transparent}
+.err{color:var(--danger);font-weight:700;text-align:center;min-height:22px;font-size:.9rem}
+
+/* closed for the night */
+.curfew-card{text-align:center;padding:34px 28px}
+.curfew-moon{font-size:3.4rem;line-height:1;margin-bottom:10px}
+.curfew-card h2{font-size:1.35rem;margin-bottom:10px}
+.curfew-clock{
+  margin-top:16px;display:inline-flex;align-items:center;gap:8px;
+  background:var(--card-2);border:1px solid var(--line);border-radius:999px;
+  padding:9px 16px;font-weight:700;font-size:.9rem;color:var(--muted);
+}
+.fixed-value{
+  padding:11px 13px;border-radius:var(--r-sm);border:1px dashed var(--line);
+  background:var(--card-2);color:var(--muted);font-weight:650;
+}
+.curfew-banner{
+  border-radius:13px;padding:11px 15px;font-size:.88rem;font-weight:600;margin-bottom:16px;
+  background:var(--warning-soft);color:var(--warning);
+}
+
+/* modal */
+.modal-bg{position:fixed;inset:0;background:rgba(10,14,24,.55);backdrop-filter:blur(3px);display:grid;place-items:center;padding:18px;z-index:60;overflow-y:auto}
+.modal{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:26px;max-width:560px;width:100%;box-shadow:var(--shadow-lg)}
+.modal h2{margin-bottom:10px}
+.modal .big{font-size:3.2rem;line-height:1;text-align:center;margin-bottom:8px}
+.banner{border-radius:13px;padding:12px 15px;font-size:.88rem;display:flex;gap:10px;align-items:flex-start;
+  background:var(--warning-soft);color:var(--warning);margin-bottom:16px}
+.banner code{background:rgba(0,0,0,.09);padding:1px 6px;border-radius:5px}
+footer.foot{text-align:center;color:var(--faint);margin-top:22px;font-size:.8rem}
+
+@media (max-width:820px){
+  .levels{grid-template-columns:1fr 1fr}
+  .grid2{grid-template-columns:1fr}
+  .stats{grid-template-columns:1fr 1fr}
+  header.top{align-items:flex-start}
+}
+@media (max-width:460px){
+  .levels{grid-template-columns:1fr}
+  .equation{font-size:3.4rem}
+}
+
+button:focus-visible,.level:focus-visible,.keypad button:focus-visible,.chip-btn:focus-visible{
+  outline:3px solid var(--primary);outline-offset:2px;border-radius:12px;
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important}
+  .mic:hover,.btn:hover,.level:hover,.chip-btn:hover{transform:none}
+}
+</style>
+
+<div class="app">
+
+<!-- =========================================================
+     AUTH
+     ========================================================= -->
+<div id="authView">
+  <header class="top">
+    <div class="brand">
+      <h1>MMM <span class="wordmark">Morris Multi Maths</span></h1>
+      <p>Speak your answer, build accuracy, earn mastery.</p>
+    </div>
+    <div class="chip"><span id="authDot" class="dot"></span><span id="authVoice">Checking voice recognition…</span></div>
+  </header>
+
+  <div id="browserBanner" class="banner hide"></div>
+  <div id="secureBanner" class="banner hide">
+    <span>⚠️</span>
+    <div><b>Voice needs a secure address.</b> Speech recognition is blocked on <code>file://</code>.
+      Serve the folder — <code>python3 -m http.server 8000</code> — and open <code>http://localhost:8000</code>.
+      The keypad works either way.</div>
+  </div>
+
+  <div class="auth-wrap">
+    <div id="curfewNotice"></div>
+
+    <!-- standalone only: choose solo practice or a whole school -->
+    <div class="card hide" id="chooseCard">
+      <h2 style="margin-bottom:8px">Welcome to Morris Multi Maths</h2>
+      <p class="note">Practise your times tables by saying the answers out loud.</p>
+      <div class="row" style="margin-top:20px;flex-direction:column;gap:10px">
+        <button class="btn primary" id="chooseSolo" style="width:100%;padding:14px">Practise on this device</button>
+        <button class="btn" id="chooseSchool" style="width:100%">Set up a school instead</button>
+      </div>
+      <p class="note" style="margin-top:16px">Practising on this device keeps your medals in this browser, just for you.
+        Setting up a school gives teachers a class dashboard and every student their own sign-in.</p>
+    </div>
+
+    <!-- standalone only: a solo learner coming back -->
+    <div class="card hide" id="resumeCard">
+      <h2 style="margin-bottom:8px">Welcome back</h2>
+      <p class="note" id="resumeWho"></p>
+      <div class="row" style="margin-top:20px;flex-direction:column;gap:10px">
+        <button class="btn primary" id="resumeGo" style="width:100%;padding:14px">Keep practising</button>
+        <button class="btn" id="resumeSchool" style="width:100%">Set up a school on this device</button>
+      </div>
+    </div>
+
+    <!-- first run -->
+    <div class="card hide" id="setupCard">
+      <h2>Set up this school</h2>
+      <p class="note">Create the administrator account. Administrators manage the ten teacher accounts; teachers manage students in their year levels.</p>
+      <div class="field"><label>Your first name<span class="hint">This is the only detail stored about you. Add an initial if another teacher shares it.</span><input type="text" id="suName" placeholder="e.g. Sam T"></label></div>
+      <div class="field"><label>PIN<span class="hint">4–8 digits.</span><input type="password" id="suPin" inputmode="numeric" placeholder="••••"></label></div>
+      <div class="field"><label>Confirm PIN<input type="password" id="suPin2" inputmode="numeric" placeholder="••••"></label></div>
+      <div class="field">
+        <label>Year levels in this school<span class="hint">Three year levels, 40 student accounts each.</span></label>
+        <div class="row"><input type="number" id="suY1" value="3" min="0" max="12" style="width:80px">
+          <input type="number" id="suY2" value="4" min="0" max="12" style="width:80px">
+          <input type="number" id="suY3" value="5" min="0" max="12" style="width:80px"></div>
+      </div>
+      <div class="err" id="suErr"></div>
+      <button class="btn primary" id="suGo" style="width:100%">Create administrator account</button>
+    </div>
+
+    <!-- sign in -->
+    <div class="card hide" id="signinCard">
+      <div class="auth-tabs">
+        <button id="tabStudent" class="active">I'm a student</button>
+        <button id="tabTeacher">I'm a teacher</button>
+      </div>
+
+      <div id="studentSignin">
+        <div class="field"><label>Year level<select id="siYear"></select></label></div>
+        <div class="field"><label>Find your name</label><div class="name-grid" id="siNames"></div></div>
+        <div id="siPinWrap" class="hide">
+          <div class="field"><label>PIN for <b id="siWho"></b></label></div>
+          <div class="pin-display" id="siPinDots"></div>
+          <div class="keypad" data-kp="signin"></div>
+        </div>
+      </div>
+
+      <div id="teacherSignin" class="hide">
+        <div class="field"><label>Your name</label><div class="name-grid" id="tiNames"></div></div>
+        <div class="field"><label>PIN<input type="password" id="tiPin" inputmode="numeric" autocomplete="current-password"></label></div>
+        <button class="btn primary" id="tiGo" style="width:100%">Sign in</button>
+      </div>
+
+      <div class="err" id="siErr" style="margin-top:12px"></div>
+    </div>
+  </div>
+  <footer class="foot" id="authFoot">The only detail stored about anyone is a first name. PINs are hashed, but this is a classroom convenience, not real security.</footer>
+</div>
+
+<!-- =========================================================
+     STUDENT
+     ========================================================= -->
+<div id="studentView" class="hide">
+  <header class="top">
+    <div class="brand">
+      <h1>MMM <span class="wordmark">Morris Multi Maths</span></h1>
+      <p id="stuWho">—</p>
+    </div>
+    <div class="who">
+      <div class="chip"><span id="voiceDot" class="dot"></span><span id="voiceStatus">Checking…</span></div>
+      <nav class="tabs">
+        <button class="active" data-stu="play">Practise &amp; test</button>
+        <button data-stu="progress">My progress</button>
+        <button data-stu="settings">Settings</button>
+      </nav>
+      <button class="btn small" id="stuOut">Sign out</button>
+    </div>
+  </header>
+
+  <section class="screen active" id="stu-play">
+    <div class="levels" id="levelCards"></div>
+    <main class="card main-card">
+      <div class="mode-row">
+        <nav class="tabs">
+          <button id="modePractice" class="active">Mixed practice</button>
+          <button id="modeSingle">One table</button>
+          <button id="modeTest">Mastery test</button>
+        </nav>
+        <div id="readiness" class="readiness"></div>
+      </div>
+
+      <div id="tablePicker" class="table-picker hide">
+        <div class="tp-row">
+          <span class="tp-label">Table</span>
+          <div class="chips" id="tableChips"></div>
+        </div>
+        <div class="tp-row">
+          <span class="tp-label">Order</span>
+          <div class="chips">
+            <button class="chip-btn" id="orderShuffle">Shuffled</button>
+            <button class="chip-btn" id="orderInOrder">1 to 12 in order</button>
+          </div>
+        </div>
+        <div class="table-strip" id="tableStrip"></div>
+      </div>
+
+      <div id="exercise">
+        <div class="eyebrow" id="eyebrow">Bronze practice</div>
+        <div class="equation" id="equation">– <span class="op">×</span> – <span class="op">=</span> <span class="q">?</span></div>
+        <div class="prompt" id="prompt">Press the microphone and say the answer.</div>
+
+        <div class="mic-shell">
+          <svg class="ring hide" id="ring" viewBox="0 0 152 152"><circle class="track" cx="76" cy="76" r="66"/><circle class="prog" id="ringProg" cx="76" cy="76" r="66"/></svg>
+          <button class="mic" id="micBtn" aria-label="Speak your answer">🎙️</button>
+          <div class="clock hide" id="clock">8</div>
+        </div>
+
+        <div class="transcript" id="transcript"></div>
+        <div class="feedback" id="feedback"></div>
+
+        <div class="collapsible" id="keypadWrap">
+          <div class="typed" id="typed">&nbsp;</div>
+          <div class="keypad" data-kp="play"></div>
+        </div>
+
+        <div class="row center" style="margin-top:14px">
+          <button class="btn small" id="btnRepeat">🔊 Say the question</button>
+          <button class="btn small" id="btnRetry">↺ Say again</button>
+          <button class="btn small" id="btnKeypad">⌨ Keypad</button>
+          <button class="btn small" id="btnSkip">New question</button>
+          <button class="btn small danger hide" id="btnQuit">Abandon test</button>
+        </div>
+        <div class="dots" id="testDots"></div>
+
+        <div class="stats">
+          <div class="stat"><strong id="sCorrect">0</strong><span>Correct this session</span></div>
+          <div class="stat"><strong id="sTotal">0</strong><span>Answered</span></div>
+          <div class="stat"><strong id="sAcc">0%</strong><span>Session accuracy</span></div>
+          <div class="stat"><strong id="sStreak">0 / 5</strong><span>Mastery streak</span></div>
+        </div>
+      </div>
+    </main>
+
+    <div class="grid2">
+      <div class="card">
+        <h2 style="font-size:1.05rem;margin-bottom:12px">Level progress</h2>
+        <div id="progressText" class="note"></div>
+        <div class="line"><span id="progressBar"></span></div>
+        <div id="readyChecks"></div>
+      </div>
+      <div class="card">
+        <h2 style="font-size:1.05rem;margin-bottom:12px">How mastery works</h2>
+        <div class="note" id="rulesNote"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="stu-progress">
+    <div class="stack">
+      <div class="card">
+        <h2 style="font-size:1.05rem">Fact map</h2>
+        <div class="note">Every fact you've met, coloured by how reliably you get it right.</div>
+        <div id="heatWrap"></div>
+        <div class="legend">
+          <span><b style="background:var(--card-2);border:1px solid var(--line)"></b> not seen</span>
+          <span><b style="background:var(--danger-soft)"></b> shaky</span>
+          <span><b style="background:var(--warning-soft)"></b> getting there</span>
+          <span><b style="background:var(--success-soft)"></b> solid</span>
+          <span><b style="background:var(--success)"></b> locked in</span>
+        </div>
+      </div>
+      <div class="grid2" style="margin-top:0">
+        <div class="card">
+          <h2 style="font-size:1.05rem;margin-bottom:10px">Trouble spots</h2>
+          <div id="troubleList" class="note"></div>
+        </div>
+        <div class="card">
+          <h2 style="font-size:1.05rem;margin-bottom:10px">Practice licence</h2>
+          <div id="licenceStatus" class="note"></div>
+          <div class="line"><span id="licenceBar"></span></div>
+          <div class="note" id="licenceNote"></div>
+        </div>
+      </div>
+      <div class="card">
+        <h2 style="font-size:1.05rem;margin-bottom:10px">Test history</h2>
+        <div class="tbl-wrap"><table class="data" id="histTable"></table></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="stu-settings">
+    <div class="card">
+      <h2 style="font-size:1.05rem;margin-bottom:6px">My settings</h2>
+      <div class="note" style="margin-bottom:14px">Test rules are set by your teacher and can't be changed here.</div>
+      <div class="field"><label><input type="checkbox" id="setSpeak" style="width:auto;margin-right:8px">Read questions aloud</label></div>
+      <div class="field"><label><input type="checkbox" id="setAuto" style="width:auto;margin-right:8px">Open the microphone automatically</label></div>
+      <div class="field"><label>Change my PIN<span class="hint">4–8 digits.</span><input type="password" id="setPin" inputmode="numeric" placeholder="New PIN"></label></div>
+      <button class="btn" id="setPinGo">Update PIN</button>
+      <div class="err" id="setErr"></div>
+      <hr style="border:0;border-top:1px solid var(--line);margin:20px 0">
+      <div class="note" id="policyNote"></div>
+    </div>
+  </section>
+</div>
+
+<!-- =========================================================
+     TEACHER
+     ========================================================= -->
+<div id="teacherView" class="hide">
+  <header class="top">
+    <div class="brand">
+      <h1>MMM <span class="wordmark">Morris Multi Maths</span></h1>
+      <p id="tchWho">—</p>
+    </div>
+    <div class="who">
+      <div class="chip hide" id="liveChip"></div>
+      <nav class="tabs" id="tchTabs">
+        <button class="active" data-tch="class">Class</button>
+        <button data-tch="students">Students</button>
+        <button data-tch="teachers">Teachers</button>
+        <button data-tch="policy">Policy &amp; data</button>
+      </nav>
+      <button class="btn small" id="tchOut">Sign out</button>
+    </div>
+  </header>
+
+  <section class="screen active" id="tch-class">
+    <div class="stack">
+      <div class="card">
+        <div class="row" style="align-items:center">
+          <h2 style="font-size:1.05rem">Class overview</h2>
+          <div class="spacer"></div>
+          <select id="tchYearFilter" style="width:auto;min-width:160px"></select>
+        </div>
+        <div class="capacity" id="tchSummary"></div>
+      </div>
+      <div class="card">
+        <div class="tbl-wrap"><table class="data" id="classTable"></table></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="tch-students">
+    <div class="stack">
+      <div class="card">
+        <h2 style="font-size:1.05rem;margin-bottom:6px">Add a student</h2>
+        <div class="note" style="margin-bottom:14px" id="capNote"></div>
+        <div class="grid2" style="margin-top:0">
+          <div>
+            <div class="field"><label>First name<span class="hint">The only detail stored. Must be unique in the year level — add an initial if two students share a name.</span><input type="text" id="nsName" placeholder="e.g. Ava"></label></div>
+          </div>
+          <div>
+            <div class="field"><label>Year level<select id="nsYear"></select></label></div>
+            <div class="field"><label>Starting PIN<span class="hint">4–8 digits. Students can change it later.</span><input type="text" id="nsPin" value="1234" inputmode="numeric"></label></div>
+          </div>
+        </div>
+        <div class="err" id="nsErr"></div>
+        <div class="row"><button class="btn primary" id="nsGo">Add student</button>
+          <button class="btn" id="nsBulk">Add several…</button></div>
+      </div>
+      <div class="card">
+        <h2 style="font-size:1.05rem;margin-bottom:10px">Student accounts</h2>
+        <div class="tbl-wrap"><table class="data" id="studentTable"></table></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="tch-teachers">
+    <div class="stack">
+      <div class="card" id="teacherAdminCard">
+        <h2 style="font-size:1.05rem;margin-bottom:6px">Add a teacher</h2>
+        <div class="note" style="margin-bottom:14px" id="tchCapNote"></div>
+        <div class="grid2" style="margin-top:0">
+          <div>
+            <div class="field"><label>First name<input type="text" id="ntName" placeholder="e.g. Jo M"></label></div>
+          </div>
+          <div>
+            <div class="field"><label>PIN<input type="text" id="ntPin" value="1234" inputmode="numeric"></label></div>
+            <div class="field"><label>Year levels this teacher can access</label>
+              <div class="checks-inline" id="ntYears"></div></div>
+          </div>
+        </div>
+        <div class="field"><label><input type="checkbox" id="ntAdmin" style="width:auto;margin-right:8px">Administrator (can manage teacher accounts)</label></div>
+        <div class="err" id="ntErr"></div>
+        <button class="btn primary" id="ntGo">Add teacher</button>
+      </div>
+      <div class="card">
+        <h2 style="font-size:1.05rem;margin-bottom:10px">Teacher accounts</h2>
+        <div class="tbl-wrap"><table class="data" id="teacherTable"></table></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="tch-policy">
+    <div class="stack">
+      <div class="card">
+        <h2 style="font-size:1.05rem;margin-bottom:6px">Test policy</h2>
+        <div class="note" style="margin-bottom:14px">Applies to every student account on this site.</div>
+        <div class="grid2" style="margin-top:0">
+          <div>
+            <div class="field"><label>Questions per test<input type="number" id="cfLen" min="5" max="60"></label></div>
+            <div class="field"><label>Perfect tests needed for mastery<input type="number" id="cfStreak" min="1" max="10"></label></div>
+            <div class="field"><label>Seconds per test question<span class="hint">Running out marks the question incorrect. Practice is never timed.</span><input type="number" id="cfSeconds" min="3" max="60"></label></div>
+            <div class="field"><label>Hours locked after a test attempt<span class="hint">Starting a test uses the attempt. Set to 0 to allow unlimited tests.</span><input type="number" id="cfLock" min="0" max="168"></label></div>
+          </div>
+          <div>
+            <div class="field"><label>Revision mix in practice<select id="cfMix">
+              <option value="0">0% — current level only</option><option value="0.2">20%</option>
+              <option value="0.3">30% (recommended)</option><option value="0.5">50%</option></select></label></div>
+            <div class="field"><label>Include revision in tests<select id="cfTestRev">
+              <option value="yes">Yes — mastered facts stay in the test</option>
+              <option value="no">No — current level only</option></select></label></div>
+            <div class="field"><label>Speech recognition language<select id="cfLang">
+              <option value="en-AU">English (Australia)</option><option value="en-NZ">English (New Zealand)</option>
+              <option value="en-GB">English (UK)</option><option value="en-US">English (US)</option></select></label></div>
+          </div>
+        </div>
+        <h3 style="font-size:.95rem;margin:8px 0 10px">Overnight curfew</h3>
+        <div class="note" style="margin-bottom:12px">The site closes to students overnight. On a class server this is enforced by the server's own clock, so changing the time on a device does nothing.</div>
+        <div class="grid2" style="margin-top:0">
+          <div>
+            <div class="field"><label><input type="checkbox" id="cfCurfewOn" style="width:auto;margin-right:8px">Close the site overnight</label></div>
+            <div class="field"><label>Closes at<select id="cfCurfewStart"></select></label></div>
+            <div class="field"><label>Opens at<select id="cfCurfewEnd"></select></label></div>
+          </div>
+          <div>
+            <div class="field"><label>Time zone<span class="hint">Fixed. Everyone is on Sydney time wherever in the world they open the site, and it follows daylight saving.</span>
+              <div class="fixed-value" id="cfCurfewTz">Sydney — AEST / AEDT</div></label></div>
+            <div class="field"><label><input type="checkbox" id="cfCurfewTeachers" style="width:auto;margin-right:8px">Teachers can still sign in overnight</label></div>
+            <div class="field"><label><input type="checkbox" id="cfCurfewGrace" style="width:auto;margin-right:8px">Let a mastery test already running finish</label></div>
+            <div class="field"><label>Minutes allowed to finish it<span class="hint">Practice stops at closing time regardless. A test cut short by the clock does not use up the day's attempt.</span><input type="number" id="cfGraceMins" min="0" max="30"></label></div>
+          </div>
+        </div>
+        <h3 style="font-size:.95rem;margin:8px 0 10px">PIN rotation</h3>
+        <div class="grid2" style="margin-top:0">
+          <div class="field"><label>Change PINs every (days)<span class="hint">Applies to students and teachers. 0 turns it off. Resetting a student's PIN restarts their clock.</span><input type="number" id="cfPinAge" min="0" max="365"></label></div>
+          <div class="field"><div class="note" id="cfPinNote"></div></div>
+        </div>
+        <h3 style="font-size:.95rem;margin:8px 0 10px">Practice licence review</h3>
+        <div class="grid2" style="margin-top:0">
+          <div class="field"><label>Review window (days)<input type="number" id="cfWindow" min="30" max="730"></label></div>
+          <div class="field"><label>Practice days required in that window<input type="number" id="cfTarget" min="1" max="365"></label></div>
+        </div>
+        <button class="btn primary" id="cfSave">Save policy</button>
+        <span class="badge ok hide" id="cfSaved">Saved</span>
+      </div>
+      <div class="card">
+        <h2 style="font-size:1.05rem;margin-bottom:6px">Data</h2>
+        <div class="note" style="margin-bottom:14px" id="storeNote"></div>
+        <div class="row">
+          <button class="btn" id="btnExport">⬇ Export everything</button>
+          <button class="btn" id="btnImport">⬆ Import backup</button>
+          <button class="btn" id="btnCsv">⬇ Class results (CSV)</button>
+          <button class="btn danger" id="btnWipe">Reset all data</button>
+        </div>
+        <input type="file" id="fileImport" accept="application/json" class="sr-only">
+      </div>
+      <div class="card">
+        <h2 style="font-size:1.05rem;margin-bottom:6px">Where this data lives</h2>
+        <div class="note" id="whereNote"></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- =========================================================
+     TIME TO CHANGE YOUR PIN
+     ========================================================= -->
+<div id="pinChangeView" class="hide">
+  <header class="top">
+    <div class="brand">
+      <h1>MMM <span class="wordmark">Morris Multi Maths</span></h1>
+      <p id="pinWho">—</p>
+    </div>
+  </header>
+  <div class="auth-wrap">
+    <div class="card">
+      <h2 style="margin-bottom:8px">Time for a new PIN</h2>
+      <p class="note" id="pinWhy"></p>
+      <div class="field" style="margin-top:16px"><label>New PIN<span class="hint">4–8 digits. It has to be one you haven't used before.</span>
+        <input type="password" id="pinNew" inputmode="numeric" autocomplete="new-password" placeholder="••••"></label></div>
+      <div class="field"><label>Type it again<input type="password" id="pinNew2" inputmode="numeric" autocomplete="new-password" placeholder="••••"></label></div>
+      <div class="err" id="pinErr"></div>
+      <button class="btn primary" id="pinSave" style="width:100%">Save my new PIN</button>
+      <div class="row center" style="margin-top:12px">
+        <button class="btn small" id="pinCancel">Sign out instead</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================
+     CLOSED FOR THE NIGHT
+     ========================================================= -->
+<div id="curfewView" class="hide">
+  <header class="top">
+    <div class="brand">
+      <h1>MMM <span class="wordmark">Morris Multi Maths</span></h1>
+      <p>Closed for the night.</p>
+    </div>
+  </header>
+  <div class="auth-wrap">
+    <div class="card curfew-card">
+      <div class="curfew-moon">🌙</div>
+      <h2 id="curfewTitle">That's enough maths for today</h2>
+      <p class="note" id="curfewBody"></p>
+      <div class="curfew-clock" id="curfewCountdown"></div>
+      <div class="row center" style="margin-top:18px">
+        <button class="btn" id="curfewTeacher">I'm a teacher</button>
+      </div>
+    </div>
+  </div>
+  <footer class="foot" id="curfewFoot"></footer>
+</div>
+
+<div id="modalHost"></div>
+</div>
+
+<script>
+"use strict";
+/* ==================================================================
+   0. CONSTANTS
+   ================================================================== */
+const LEVELS = [
+  { id:"bronze",   name:"Bronze",   tables:[2,5,10] },
+  { id:"silver",   name:"Silver",   tables:[3,4]    },
+  { id:"gold",     name:"Gold",     tables:[6,8]    },
+  { id:"platinum", name:"Platinum", tables:[7,9]    },
+  { id:"diamond",  name:"Diamond",  tables:[11,12]  }
+];
+const MULTIPLIERS = [1,2,3,4,5,6,7,8,9,10,11,12];
+const MAX_TEACHERS      = 10;
+const MAX_STUDENTS      = 120;
+const MAX_PER_YEAR      = 40;
+const YEAR_SLOTS        = 3;
+const STORAGE_KEY       = "morris-multi-maths.v3";
+const LEGACY_KEYS       = ["times-table-quest.v3"];   // accounts saved under the old name
+
+const levelById   = id => LEVELS.find(l => l.id === id) || LEVELS[0];
+const levelIndex  = id => LEVELS.findIndex(l => l.id === id);
+const factKey     = (a,b) => a + "x" + b;
+
+/* ==================================================================
+   1. STORAGE ADAPTER
+   ------------------------------------------------------------------
+   Every read and write in the app goes through Store. Swapping in a
+   server means implementing the same four methods and calling
+   Store.use(RemoteAdapter) — nothing else changes.
+   ================================================================== */
+const LocalAdapter = {
+  name: "local",
+  available: true,
+  async load(){
+    try {
+      let raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw){                                   // carry over data saved under the old name
+        for(const k of LEGACY_KEYS){
+          const legacy = localStorage.getItem(k);
+          if(legacy){ raw = legacy; localStorage.setItem(STORAGE_KEY, legacy); break; }
+        }
+      }
+      return raw ? JSON.parse(raw) : null;
+    } catch(e){ LocalAdapter.available = false; return null; }
+  },
+  async save(db){
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(db)); LocalAdapter.available = true; return true; }
+    catch(e){ LocalAdapter.available = false; return false; }
+  },
+  async patchStudent(id, progress, db){ return LocalAdapter.save(db); },
+  async ping(){ return LocalAdapter.available; }
+};
+
+/* Live server adapter. The page detects a Morris Multi Maths server at its own
+   origin; opened as a plain file it stays fully local. Students only ever
+   receive their own record, teachers only the students in their year levels. */
+const ServerAdapter = {
+  name: "server",
+  base: (location.origin || "") + "/api",
+  token: null,
+  available: false,
+  async request(path, opts){
+    const o = Object.assign({ headers:{} }, opts || {});
+    o.headers = Object.assign({ "Content-Type":"application/json" }, o.headers);
+    if(ServerAdapter.token) o.headers.Authorization = "Bearer " + ServerAdapter.token;
+    const r = await fetch(ServerAdapter.base + path, o);
+    const text = await r.text();
+    let body = null;
+    try { body = text ? JSON.parse(text) : null; } catch(e){ body = null; }
+    if(!r.ok){
+      const err = new Error((body && body.error) || ("Server error " + r.status));
+      err.status = r.status; err.body = body;
+      throw err;
+    }
+    return body;
+  },
+  async load(){ return ServerAdapter.request("/state"); },
+  async save(){ return true; },                       // whole-db writes never leave the browser
+  async patchStudent(id, progress){
+    return ServerAdapter.request("/students/" + encodeURIComponent(id) + "/progress",
+      { method:"PUT", body: JSON.stringify(progress) });
+  },
+  async ping(){
+    try { const r = await fetch(ServerAdapter.base + "/health"); return r.ok; } catch(e){ return false; }
+  }
+};
+function remote(){ return Store.adapter.name === "server"; }
+function apiPost(path, body){ return ServerAdapter.request(path, { method:"POST", body: JSON.stringify(body||{}) }); }
+function apiDelete(path){ return ServerAdapter.request(path, { method:"DELETE" }); }
+async function refreshFromServer(){
+  if(!remote()) return;
+  Store.db = migrate(await ServerAdapter.load());
+}
+
+const Store = {
+  adapter: LocalAdapter,
+  db: null,
+  dirty: false,
+  timer: null,
+  use(adapter){ this.adapter = adapter; },
+  async load(){
+    let db = null;
+    try { db = await this.adapter.load(); } catch(e){ db = null; }
+    this.db = migrate(db);
+    return this.db;
+  },
+  persist(){                                   // debounced whole-db write (local mode)
+    if(this.adapter.name === "server") return;
+    this.dirty = true;
+    clearTimeout(this.timer);
+    this.timer = setTimeout(async () => {
+      this.dirty = false;
+      await this.adapter.save(this.db);
+      renderStoreNote();
+    }, 150);
+  },
+  async flush(){ clearTimeout(this.timer); this.dirty = false; await this.adapter.save(this.db); },
+  pendingProgress: null,
+  progressTimer: null,
+  async patchStudent(student){                 // granular hook for the server
+    this.persist();
+    if(this.adapter.name !== "server") return;
+    this.pendingProgress = student;
+    clearTimeout(this.progressTimer);
+    this.progressTimer = setTimeout(async () => {
+      const s = this.pendingProgress; this.pendingProgress = null;
+      if(!s) return;
+      try { await this.adapter.patchStudent(s.id, s.progress); }
+      catch(e){ setSyncNote(e.message); }
+    }, 400);
+  }
+};
+
+function defaultConfig(){
+  return {
+    testLength: 30,
+    requiredStreak: 5,
+    testSeconds: 5,
+    testLockHours: 24,
+    mixRatio: 0.3,
+    testIncludesRevision: true,
+    lang: "en-AU",
+    adaptive: true,
+    licenceWindowDays: 183,
+    licenceTargetDays: 60,
+    yearLevels: [3,4,5],
+    pinMaxAgeDays: 90,
+    curfew: {
+      enabled: true,
+      startHour: 20,                 // 8pm Sydney
+      endHour: 7,                    // 7am Sydney
+      teachersExempt: true,
+      graceForTestInProgress: true,
+      graceMinutes: 5
+    }
+  };
+}
+function blankProgress(){
+  const levels = {};
+  LEVELS.forEach(l => levels[l.id] = { mastered:false, streak:0, bestStreak:0, tests:0, perfect:0, lastTestAt:0 });
+  return {
+    currentLevel: "bronze",
+    levels, facts:{}, practiceLog:[], history:[], practiceDates:[],
+    prefs:{ speak:true, autoListen:true, singleTable:5, singleOrder:"shuffle" },
+    lastTestStartedAt: 0,
+    createdAt: Date.now(), lastActive: 0
+  };
+}
+function migrate(db){
+  if(!db || typeof db !== "object") db = {};
+  db.version  = 3;
+  db.config   = Object.assign(defaultConfig(), db.config || {});
+  db.config.curfew = Object.assign(defaultConfig().curfew, db.config.curfew || {});
+  if(!Array.isArray(db.config.yearLevels) || db.config.yearLevels.length !== YEAR_SLOTS){
+    db.config.yearLevels = defaultConfig().yearLevels;
+  }
+  db.teachers = Array.isArray(db.teachers) ? db.teachers : [];
+  db.students = Array.isArray(db.students) ? db.students : [];
+  if(typeof db.soloId !== "string") db.soloId = null;   // standalone: the one learner on this device
+  db.teachers.forEach(t => { delete t.username; });
+  [...db.teachers, ...db.students].forEach(a => {
+    if(!a.pinSetAt) a.pinSetAt = a.createdAt || Date.now();
+    if(!Array.isArray(a.pinHistory)) a.pinHistory = [];
+  });
+  db.students.forEach(s => {
+    delete s.username;
+    s.progress = Object.assign(blankProgress(), s.progress || {});
+    LEVELS.forEach(l => { if(!s.progress.levels[l.id]) s.progress.levels[l.id] = { mastered:false, streak:0, bestStreak:0, tests:0, perfect:0, lastTestAt:0 }; });
+    if(!Array.isArray(s.progress.practiceDates)) s.progress.practiceDates = [];
+    if(!s.progress.prefs) s.progress.prefs = { speak:true, autoListen:true };
+  });
+  return db;
+}
+/* Never null: a voice-list callback can fire before the first load resolves. */
+const cfg = () => (Store.db || (Store.db = migrate(null))).config;
+
+/* ==================================================================
+   1b. CURFEW
+   ------------------------------------------------------------------
+   The site closes overnight. Two clocks can answer "what time is it":
+   the server's, which a child cannot touch, and the device's, which
+   they can. When a server is present its answer is the one that counts
+   and this code only renders it; opened as a plain file there is no
+   server, so the device clock is all there is — honest, but soft.
+   The zone is an IANA name rather than a fixed offset, so 8pm stays
+   8pm on the wall clock when daylight saving starts and ends.
+   ================================================================== */
+const CURFEW_TZ = "Australia/Sydney";   // fixed, everywhere, for everyone
+function zonedMinutes(date, timezone){
+  try {
+    const parts = new Intl.DateTimeFormat("en-AU", {
+      timeZone: timezone, hour12:false, hour:"2-digit", minute:"2-digit"
+    }).formatToParts(date);
+    const got = {};
+    for(const p of parts) got[p.type] = p.value;
+    const h = parseInt(got.hour, 10) % 24, m = parseInt(got.minute, 10);
+    if(isNaN(h) || isNaN(m)) return null;
+    return h*60 + m;
+  } catch(e){ return null; }
+}
+/* Sydney's published rules as a backstop, so a browser with no timezone data
+   still gets a curfew instead of an open door. AEDT (UTC+11) runs 2am on the
+   first Sunday in October to 3am on the first Sunday in April. */
+function sydneyOffsetHours(date){
+  const y = date.getUTCFullYear();
+  const firstSunday = (year, monthIndex) => {
+    const first = new Date(Date.UTC(year, monthIndex, 1));
+    return 1 + ((7 - first.getUTCDay()) % 7);
+  };
+  const dstStart = Date.UTC(y, 9, firstSunday(y, 9), 2 - 10, 0, 0);
+  const dstEnd   = Date.UTC(y, 3, firstSunday(y, 3), 3 - 11, 0, 0);
+  const t = date.getTime();
+  return (t >= dstStart || t < dstEnd) ? 11 : 10;
+}
+function sydneyMinutes(date){
+  const d = date || new Date();
+  const viaIcu = zonedMinutes(d, CURFEW_TZ);
+  if(viaIcu !== null) return viaIcu;
+  const utc = d.getUTCHours()*60 + d.getUTCMinutes();
+  return ((utc + sydneyOffsetHours(d)*60) % 1440 + 1440) % 1440;
+}
+function curfewState(date, c){
+  c = c || cfg().curfew;
+  const now = date || new Date();
+  if(!c || !c.enabled) return { closed:false };
+  const mins = sydneyMinutes(now);
+  const start = (c.startHour|0) * 60, end = (c.endHour|0) * 60;
+  const closed = start === end ? false
+               : start > end ? (mins >= start || mins < end)     // spans midnight
+               : (mins >= start && mins < end);
+  let minutesLeft = 0;
+  if(closed){
+    minutesLeft = (end - mins + 1440) % 1440;
+    if(minutesLeft === 0) minutesLeft = 1440;
+  }
+  return { closed, minutesLeft, opensAt: hourLabel(c.endHour), closesAt: hourLabel(c.startHour),
+           graceMinutes: c.graceMinutes, timezone: CURFEW_TZ };
+}
+function hourLabel(h){
+  h = ((h|0) % 24 + 24) % 24;
+  const suffix = h < 12 ? "am" : "pm";
+  const display = h % 12 === 0 ? 12 : h % 12;
+  return display + ":00 " + suffix;
+}
+function waitLabel(mins){
+  if(mins <= 1) return "under a minute";
+  if(mins < 60) return mins + " minutes";
+  const h = Math.floor(mins/60), m = mins % 60;
+  return m ? `${h} hour${h===1?"":"s"} ${m} min` : `${h} hour${h===1?"":"s"}`;
+}
+/* In server mode this is the server's answer, refreshed by a poll.
+   In standalone mode it is computed here from the device clock. */
+let serverCurfew = null;
+function curfewNow(){
+  if(remote() && serverCurfew) return serverCurfew;
+  return curfewState();
+}
+function curfewAppliesTo(role){
+  const state = (remote() && serverCurfew) ? serverCurfew : null;
+  const c = cfg().curfew;
+  if(state){                                           // server mode: its settings, not ours
+    if(!state.enabled) return false;
+    if(role === "teacher" && state.teachersExempt) return false;
+    return true;
+  }
+  if(!c || !c.enabled) return false;
+  if(role === "teacher" && c.teachersExempt) return false;
+  return true;
+}
+
+/* ==================================================================
+   2. ACCOUNTS
+   ================================================================== */
+function uid(prefix){
+  const rand = (crypto && crypto.getRandomValues)
+    ? Array.from(crypto.getRandomValues(new Uint8Array(6))).map(b=>b.toString(16).padStart(2,"0")).join("")
+    : Math.random().toString(16).slice(2,14);
+  return prefix + "_" + rand;
+}
+function makeSalt(){
+  if(crypto && crypto.getRandomValues){
+    return Array.from(crypto.getRandomValues(new Uint8Array(8))).map(b=>b.toString(16).padStart(2,"0")).join("");
+  }
+  return String(Math.random()).slice(2,18);
+}
+async function hashPin(pin, salt){
+  const text = salt + ":" + String(pin);
+  if(crypto && crypto.subtle && crypto.subtle.digest){
+    try {
+      const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+      return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
+    } catch(e){ /* fall through */ }
+  }
+  let h1 = 0x811c9dc5, h2 = 0x1000193;         // fallback for insecure contexts
+  for(let i=0;i<text.length;i++){
+    h1 = Math.imul(h1 ^ text.charCodeAt(i), 16777619) >>> 0;
+    h2 = Math.imul(h2 + text.charCodeAt(i) * (i+7), 2246822519) >>> 0;
+  }
+  return "fnv" + h1.toString(16).padStart(8,"0") + h2.toString(16).padStart(8,"0");
+}
+const validPin = p => /^\d{4,8}$/.test(String(p||"").trim());
+/* The only personal detail stored is a first name. It has to be unique within
+   the group people pick from, so signing in is never ambiguous. */
+const validName = n => /^[\p{L}][\p{L}\d '.-]{0,23}$/u.test(String(n||"").trim());
+const cleanName = n => String(n||"").trim().replace(/\s+/g," ");
+const nameKey   = n => cleanName(n).toLowerCase();
+function studentNameTaken(name, yearLevel, exceptId){
+  return Store.db.students.some(s => s.yearLevel === yearLevel && nameKey(s.name) === nameKey(name) && s.id !== exceptId);
+}
+function teacherNameTaken(name, exceptId){
+  return Store.db.teachers.some(t => nameKey(t.name) === nameKey(name) && t.id !== exceptId);
+}
+function studentsInYear(year){ return Store.db.students.filter(s => s.yearLevel === year); }
+function yearCapacity(year){ return { used: studentsInYear(year).length, max: MAX_PER_YEAR }; }
+function schoolCapacity(){ return { used: Store.db.students.length, max: MAX_STUDENTS }; }
+
+async function createTeacher({name, pin, yearLevels, admin}){
+  if(remote()) return apiPost("/teachers", { name, pin, yearLevels, admin });
+  if(Store.db.teachers.length >= MAX_TEACHERS) throw new Error(`This site allows ${MAX_TEACHERS} teacher accounts and all ${MAX_TEACHERS} are in use.`);
+  if(!validName(name)) throw new Error("Enter a first name — letters, up to 24 characters.");
+  if(teacherNameTaken(name)) throw new Error("Another teacher already uses that first name. Add an initial, like \u201cSam T\u201d.");
+  if(!validPin(pin)) throw new Error("PINs must be 4–8 digits.");
+  const years = (yearLevels||[]).filter(y => cfg().yearLevels.includes(y));
+  if(!years.length && !admin) throw new Error("Select at least one year level for this teacher.");
+  const salt = makeSalt();
+  const t = { id:uid("t"), role:"teacher", name:cleanName(name),
+              salt, pinHash: await hashPin(pin, salt), pinSetAt: Date.now(), pinHistory: [],
+              yearLevels: years, admin: !!admin, createdAt: Date.now() };
+  Store.db.teachers.push(t);
+  Store.persist();
+  return t;
+}
+async function createStudent({name, pin, yearLevel}){
+  if(remote()) return apiPost("/students", { name, pin, yearLevel });
+  const cap = schoolCapacity();
+  if(cap.used >= cap.max) throw new Error(`This site allows ${MAX_STUDENTS} student accounts and all ${MAX_STUDENTS} are in use.`);
+  if(!cfg().yearLevels.includes(yearLevel)) throw new Error("Choose one of this school's year levels.");
+  const yc = yearCapacity(yearLevel);
+  if(yc.used >= yc.max) throw new Error(`Year ${yearLevel} already has its ${MAX_PER_YEAR} student accounts.`);
+  if(!validName(name)) throw new Error("Enter a first name — letters, up to 24 characters.");
+  if(studentNameTaken(name, yearLevel)) throw new Error(`Year ${yearLevel} already has a ${cleanName(name)}. Add an initial, like \u201c${cleanName(name)} B\u201d.`);
+  if(!validPin(pin)) throw new Error("PINs must be 4–8 digits.");
+  const salt = makeSalt();
+  const s = { id:uid("s"), role:"student", name:cleanName(name), yearLevel,
+              salt, pinHash: await hashPin(pin, salt), pinSetAt: Date.now(), pinHistory: [],
+              createdAt: Date.now(), progress: blankProgress() };
+  Store.db.students.push(s);
+  Store.persist();
+  return s;
+}
+async function verifyPin(account, pin){
+  if(!account) return false;
+  const h = await hashPin(pin, account.salt);
+  return h === account.pinHash;
+}
+async function setPin(account, pin){
+  if(!validPin(pin)) throw new Error("PINs must be 4–8 digits.");
+  if(remote()) return apiPost("/pin", { id: account.id, pin });
+  if(await pinReused(account, pin)) throw new Error("Choose a PIN you haven't used recently.");
+  await applyNewPin(account, pin);
+  Store.persist();
+}
+/* PIN rotation, local mode. The server has the same rules; this keeps the
+   standalone copy honest rather than quietly exempt. */
+function pinAgeDays(account){
+  const set = account.pinSetAt || account.createdAt || 0;
+  return set ? (Date.now() - set) / 86400000 : Infinity;
+}
+function pinExpired(account){
+  if(account && account.solo) return false;        // no PIN to rotate
+  const max = cfg().pinMaxAgeDays || 0;
+  return max ? pinAgeDays(account) >= max : false;
+}
+function pinDaysLeft(account){
+  const max = cfg().pinMaxAgeDays || 0;
+  return max ? Math.max(0, Math.ceil(max - pinAgeDays(account))) : null;
+}
+async function pinReused(account, pin){
+  if(await verifyPin(account, pin)) return true;
+  for(const old of account.pinHistory || []){
+    if(await hashPin(pin, old.salt) === old.hash) return true;
+  }
+  return false;
+}
+async function applyNewPin(account, pin){
+  if(account.pinHash){
+    account.pinHistory = (account.pinHistory || []).concat([{ salt: account.salt, hash: account.pinHash }]).slice(-3);
+  }
+  account.salt = makeSalt();
+  account.pinHash = await hashPin(pin, account.salt);
+  account.pinSetAt = Date.now();
+}
+function teacherCanSee(teacher, student){
+  if(!teacher) return false;
+  if(teacher.admin) return true;
+  return teacher.yearLevels.includes(student.yearLevel);
+}
+function visibleStudents(teacher){
+  return Store.db.students.filter(s => teacherCanSee(teacher, s))
+    .sort((a,b) => a.yearLevel - b.yearLevel || a.name.localeCompare(b.name));
+}
+
+/* ------------------------------------------------------------------
+   Mastery tests: one attempt per lock period. Starting a test uses the
+   attempt, whether or not it is finished.
+   ------------------------------------------------------------------ */
+function testLock(progress){
+  const p = progress || P();
+  const hours = cfg().testLockHours || 0;
+  if(!hours || !p.lastTestStartedAt) return { locked:false, until:0, msLeft:0 };
+  const until = p.lastTestStartedAt + hours*3600e3;
+  const msLeft = until - Date.now();
+  return { locked: msLeft > 0, until, msLeft: Math.max(0, msLeft) };
+}
+function formatWait(ms){
+  const mins = Math.ceil(ms/60000);
+  if(mins < 60) return `${mins} minute${mins===1?"":"s"}`;
+  const h = Math.floor(mins/60), m = mins % 60;
+  return m ? `${h} hour${h===1?"":"s"} ${m} min` : `${h} hour${h===1?"":"s"}`;
+}
+
+/* ------------------------------------------------------------------
+   Solo practice. Without a server there is no class and no teacher, so
+   a visitor should land on a question rather than on a form asking them
+   to administer a school. One learner, no PIN, progress in this browser.
+   ------------------------------------------------------------------ */
+function soloStudent(){
+  if(remote() || !Store.db.soloId) return null;
+  return Store.db.students.find(s => s.id === Store.db.soloId) || null;
+}
+async function createSolo(name){
+  const year = cfg().yearLevels[0];
+  const salt = makeSalt();
+  const s = { id:uid("s"), role:"student", name: cleanName(name) || "Me", yearLevel: year,
+              solo: true, salt, pinHash: await hashPin("", salt), pinSetAt: Date.now(), pinHistory: [],
+              createdAt: Date.now(), progress: blankProgress() };
+  Store.db.students.push(s);
+  Store.db.soloId = s.id;
+  Store.persist();
+  return s;
+}
+function enterSolo(s){
+  session = { role:"student", id:s.id };
+  enterStudent();
+}
+
+/* ==================================================================
+   3. SESSION
+   ================================================================== */
+let session = { role:null, id:null };
+const me       = () => session.role === "student" ? Store.db.students.find(s => s.id === session.id) : null;
+const meTeacher= () => session.role === "teacher" ? Store.db.teachers.find(t => t.id === session.id) : null;
+const P        = () => me().progress;
+
+/* ==================================================================
+   4. QUESTION ENGINE
+   ================================================================== */
+function factStat(key){
+  const f = P().facts;
+  return f[key] || (f[key] = { seen:0, correct:0, recent:[] });
+}
+function factScore(key){
+  const f = P().facts[key];
+  if(!f || !f.seen) return 0;
+  const recent = f.recent.slice(-6);
+  const acc = recent.reduce((a,b)=>a+b,0) / recent.length;
+  return acc * (0.55 + 0.45 * Math.min(1, f.seen/4));
+}
+function levelOfTable(t){
+  const l = LEVELS.find(x => x.tables.includes(t));
+  return l ? l.id : null;
+}
+function factsForLevel(id){
+  const out = [];
+  levelById(id).tables.forEach(t => MULTIPLIERS.forEach(m => out.push(factKey(t,m))));
+  return out;
+}
+function reviseFacts(currentId){
+  const idx = levelIndex(currentId);
+  let out = [];
+  LEVELS.slice(0, idx).forEach(l => { if(P().levels[l.id].mastered) out = out.concat(factsForLevel(l.id)); });
+  return out;
+}
+function weightedPick(keys){
+  if(!cfg().adaptive) return keys[Math.floor(Math.random()*keys.length)];
+  const w = keys.map(k => {
+    const f = P().facts[k];
+    if(!f || !f.seen) return 1.35;
+    return 0.25 + 1.1 * (1 - factScore(k));
+  });
+  const total = w.reduce((a,b)=>a+b,0);
+  let r = Math.random() * total;
+  for(let i=0;i<keys.length;i++){ r -= w[i]; if(r <= 0) return keys[i]; }
+  return keys[keys.length-1];
+}
+let lastKey = null;
+function nextQuestion(levelId, mixOverride){
+  const revise = reviseFacts(levelId);
+  const mix = mixOverride !== undefined ? mixOverride : cfg().mixRatio;
+  const useRevision = revise.length > 0 && Math.random() < mix;
+  const pool = useRevision ? revise : factsForLevel(levelId);
+  let key = weightedPick(pool), guard = 0;
+  while(key === lastKey && pool.length > 1 && guard++ < 8) key = weightedPick(pool);
+  lastKey = key;
+  const [a,b] = key.split("x").map(Number);
+  const flip = Math.random() < 0.5;
+  return { key, a, b, left: flip?b:a, right: flip?a:b, answer: a*b, revision: useRevision };
+}
+function buildTestSet(levelId, n){
+  const mix = cfg().testIncludesRevision ? cfg().mixRatio : 0;
+  const available = factsForLevel(levelId).length + (mix > 0 ? reviseFacts(levelId).length : 0);
+  const uniqueTarget = Math.min(n, available);
+  const set = [], seen = new Set();
+  let attempts = 0;
+  while(set.length < n && attempts < n*80){
+    attempts++;
+    const q = nextQuestion(levelId, mix);
+    if(seen.has(q.key) && seen.size < uniqueTarget) continue;
+    seen.add(q.key); set.push(q);
+  }
+  while(set.length < n) set.push(nextQuestion(levelId, mix));
+  return set;
+}
+
+/* ==================================================================
+   5. RECORDING + LICENCE
+   ================================================================== */
+function todayKey(d){
+  const now = d || new Date();
+  return [now.getFullYear(), String(now.getMonth()+1).padStart(2,"0"), String(now.getDate()).padStart(2,"0")].join("-");
+}
+function dateFromKey(key){ const [y,m,d] = key.split("-").map(Number); return new Date(y, m-1, d); }
+function recordPracticeDay(){
+  const p = P(), k = todayKey();
+  if(!p.practiceDates.includes(k)) p.practiceDates.push(k);
+  if(p.practiceDates.length > 800) p.practiceDates.shift();
+}
+function recordAnswer(levelId, q, ok, mode){
+  const f = factStat(q.key);
+  f.seen++; if(ok) f.correct++;
+  f.recent.push(ok?1:0);
+  if(f.recent.length > 12) f.recent.shift();
+  const p = P();
+  p.practiceLog.push({ t:Date.now(), level:levelId, key:q.key, ok:ok?1:0, mode });
+  if(p.practiceLog.length > 1200) p.practiceLog.shift();
+  if(mode !== "test") recordPracticeDay();      // mixed practice and single-table drill both count as a practice day
+  p.lastActive = Date.now();
+  Store.patchStudent(me());
+}
+function recordTest(levelId, score, total){
+  const p = P(), L = p.levels[levelId];
+  const perfect = total > 0 && score === total;
+  L.tests++; L.lastTestAt = Date.now();
+  if(perfect){ L.perfect++; L.streak++; L.bestStreak = Math.max(L.bestStreak, L.streak); }
+  else L.streak = 0;
+  p.history.push({ t:Date.now(), level:levelId, score, total, perfect, streakAfter:L.streak });
+  if(p.history.length > 120) p.history.shift();
+  let mastered = false, unlocked = null;
+  if(!L.mastered && L.streak >= cfg().requiredStreak){
+    L.mastered = true; mastered = true;
+    const next = LEVELS[levelIndex(levelId)+1];
+    if(next){ unlocked = next.id; p.currentLevel = next.id; }
+  }
+  Store.patchStudent(me());
+  return { perfect, mastered, unlocked, streak:L.streak };
+}
+function licenceDays(progress){
+  const p = progress || P();
+  const end = new Date(), start = new Date();
+  start.setDate(start.getDate() - (cfg().licenceWindowDays - 1));
+  return new Set((p.practiceDates||[]).filter(k => { const d = dateFromKey(k); return d >= start && d <= end; })).size;
+}
+const licenceOk = progress => licenceDays(progress) >= cfg().licenceTargetDays;
+function licenceText(progress){
+  const days = licenceDays(progress), target = cfg().licenceTargetDays;
+  if(days >= target) return `✓ Licence activity target met: ${days}/${target} practice days in the current ${cfg().licenceWindowDays}-day period.`;
+  const left = target - days;
+  return `Licence review due: ${days}/${target} practice days completed. ${left} more practice day${left===1?"":"s"} needed.`;
+}
+
+/* ==================================================================
+   6. READINESS
+   ================================================================== */
+function readiness(levelId, progress){
+  const p = progress || P();
+  const L = p.levels[levelId];
+  const keys = new Set(factsForLevel(levelId));
+  const rows = p.practiceLog.filter(r => r.t > (L.lastTestAt||0) && keys.has(r.key));
+  const n = rows.length;
+  const acc = n ? rows.reduce((a,r)=>a+r.ok,0)/n : 0;
+  const last15 = rows.slice(-15);
+  const recentAcc = last15.length ? last15.reduce((a,r)=>a+r.ok,0)/last15.length : 0;
+  const coverage = new Set(rows.map(r=>r.key)).size / keys.size;
+  const weak = [...keys].filter(k => { const f = p.facts[k]; return f && f.seen >= 2 && scoreOf(p,k) < 0.5; });
+  const needQ = Math.max(30, Math.round(keys.size * 0.9));
+  const checks = [
+    { met:n >= needQ,             label:`Practise ${needQ} questions since the last test`, val:`${Math.min(n,needQ)} / ${needQ}` },
+    { met:coverage >= 0.8,        label:`Meet at least 80% of this level's facts`,         val:`${Math.round(coverage*100)}%` },
+    { met:n >= 10 && acc >= 0.9,  label:`Hold 90% accuracy across those questions`,        val:n ? `${Math.round(acc*100)}%` : "—" },
+    { met:last15.length >= 10 && recentAcc >= 0.93, label:`Be sharp in the last 15 answers`, val:last15.length ? `${Math.round(recentAcc*100)}%` : "—" },
+    { met:n >= 10 && weak.length === 0, label:`Clear every shaky fact`,                    val:weak.length ? `${weak.length} left` : (n>=10?"clear":"—") }
+  ];
+  const met = checks.filter(c=>c.met).length;
+  return { ready: met === checks.length, checks, met, total:checks.length, n, acc, coverage, weak };
+}
+function scoreOf(p, key){
+  const f = p.facts[key];
+  if(!f || !f.seen) return 0;
+  const recent = f.recent.slice(-6);
+  const acc = recent.reduce((a,b)=>a+b,0)/recent.length;
+  return acc * (0.55 + 0.45 * Math.min(1, f.seen/4));
+}
+
+/* ==================================================================
+   7. SPOKEN NUMBER PARSING (Australian English friendly)
+   ================================================================== */
+const SMALL = { zero:0,oh:0,nought:0,one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,
+  ten:10,eleven:11,twelve:12,thirteen:13,fourteen:14,fifteen:15,sixteen:16,seventeen:17,eighteen:18,nineteen:19 };
+const TENS = { twenty:20,thirty:30,forty:40,fourty:40,fifty:50,sixty:60,seventy:70,eighty:80,ninety:90 };
+const HOMOPHONES = {
+  to:2,too:2,tu:2,tew:2, won:1,wun:1,wan:1, for:4,fore:4,faw:4, ate:8,ait:8,
+  free:3,tree:3,thee:3, sex:6,sicks:6,sics:6, sevn:7, nein:9,niner:9,nyne:9, tin:10,
+  twenny:20,thirdy:30,fordy:40,fifdy:50,sixdy:60,sevendy:70,eighdy:80,ninedy:90
+};
+const FILLER = new Set(["the","answer","answers","is","it","its","it's","equals","equal","um","uh","er","ah","mm","hmm",
+  "i","think","reckon","that's","thats","would","will","be","and","a","so","well","like","ok","okay","yeah","yep","nah",
+  "my","maybe","probably","gonna","right","miss","sir"]);
+
+const normaliseSpeech = t => String(t||"").toLowerCase().replace(/[^a-z0-9\s-]/g," ").replace(/-/g," ").replace(/\s+/g," ").trim();
+const isNumberToken = w => w === "hundred" || w === "thousand" || (w in SMALL) || (w in TENS) || (w in HOMOPHONES) || /^\d+$/.test(w);
+function wordsToNumber(tokens){
+  let total = 0, current = 0, touched = false;
+  for(const w of tokens){
+    if(w === "hundred"){ current = (current||1)*100; touched = true; continue; }
+    if(w === "thousand"){ total += (current||1)*1000; current = 0; touched = true; continue; }
+    if(w in SMALL){ current += SMALL[w]; touched = true; continue; }
+    if(w in TENS){ current += TENS[w]; touched = true; continue; }
+    if(w in HOMOPHONES){ current += HOMOPHONES[w]; touched = true; continue; }
+    if(/^\d+$/.test(w)){ current += parseInt(w,10); touched = true; continue; }
+    return null;
+  }
+  return touched ? total + current : null;
+}
+function parseSpokenNumber(text){
+  const norm = normaliseSpeech(text);
+  if(!norm) return null;
+  const tokens = norm.split(" ").filter(w => w && !FILLER.has(w));
+  if(!tokens.length) return null;
+  if(tokens.length === 1 && /^\d+$/.test(tokens[0])) return parseInt(tokens[0],10);
+  const words = wordsToNumber(tokens);
+  if(words !== null) return words;
+  let start = tokens.length;
+  while(start > 0 && isNumberToken(tokens[start-1])) start--;
+  if(start < tokens.length){
+    const tail = wordsToNumber(tokens.slice(start));
+    if(tail !== null) return tail;
+  }
+  const nums = norm.match(/\d+/g);
+  return nums && nums.length ? parseInt(nums[nums.length-1],10) : null;
+}
+function digitJoinMatches(text, target){
+  const tokens = normaliseSpeech(text).split(" ").filter(Boolean);
+  if(tokens.length < 2) return false;
+  let joined = "";
+  for(const t of tokens){
+    if(/^\d$/.test(t)){ joined += t; continue; }
+    const v = (t in SMALL) ? SMALL[t] : (t in HOMOPHONES ? HOMOPHONES[t] : null);
+    if(v === null || v === undefined || v > 9) return false;
+    joined += String(v);
+  }
+  return joined.length > 1 && parseInt(joined,10) === target;
+}
+function judgeSpeech(alternatives, target){
+  const alts = (alternatives||[]).filter(Boolean);
+  for(const a of alts){
+    if(parseSpokenNumber(a) === target) return { ok:true, value:target, said:a };
+    if(digitJoinMatches(a, target))     return { ok:true, value:target, said:a };
+  }
+  for(const a of alts){
+    const v = parseSpokenNumber(a);
+    if(v !== null) return { ok:false, value:v, said:a };
+  }
+  return { ok:false, value:null, said: alts[0] || "" };
+}
+
+/* ==================================================================
+   8. SPEECH IO
+   ================================================================== */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition || null;
+const isSecure = window.isSecureContext && location.protocol !== "file:";
+
+/* Browser reality check. Chromium-based Edge exposes webkitSpeechRecognition
+   but its implementation is a no-op — it starts, ends, and never returns a
+   result — so feature detection alone would leave a student staring at a mic
+   that never answers. Detect it up front, and keep a watchdog for any other
+   browser that behaves the same way. */
+const UA = navigator.userAgent || "";
+const isEdge    = /\bEdg(?:e|A|iOS)?\//.test(UA);
+const isFirefox = /\bFirefox\//.test(UA);
+const isOpera   = /\bOPR\//.test(UA);
+let silentRounds = 0;                        // listen attempts that returned nothing at all
+let voiceDeclaredBroken = false;
+function browserVoiceVerdict(){
+  if(!SR)      return { ok:false, msg:`This browser has no speech recognition. ${isFirefox ? "Firefox has never shipped it" : "It isn't available here"} — use Chrome or Safari for voice, or the keypad here.` };
+  if(isEdge)   return { ok:false, msg:"Microsoft Edge has a speech recognition button that never returns an answer. Use Google Chrome or Safari for voice practice — the keypad works here." };
+  if(isOpera)  return { ok:false, msg:"Opera doesn't support speech recognition. Use Chrome or Safari for voice, or the keypad here." };
+  if(!isSecure)return { ok:false, msg:"Voice needs a secure address (https:// or localhost). The keypad works here." };
+  return { ok:true, msg:langLabel() + " voice recognition ready" };
+}
+function markVoiceBroken(msg){
+  if(voiceDeclaredBroken) return;
+  voiceDeclaredBroken = true;
+  setVoiceChip("error", msg);
+  const b = $("browserBanner");
+  if(b){ b.innerHTML = `<span>🎙️</span><div><b>Voice isn't working in this browser.</b> ${esc(msg)}</div>`; b.classList.remove("hide"); }
+  $("keypadWrap") && $("keypadWrap").classList.add("open");
+}
+const voice = { rec:null, active:false, target:null, gotResult:false, gotError:false };
+function setVoiceChip(state, text){
+  [["voiceDot","voiceStatus"],["authDot","authVoice"]].forEach(([d,s]) => {
+    const dot = document.getElementById(d), lab = document.getElementById(s);
+    if(dot) dot.className = "dot " + (state||"");
+    if(lab) lab.textContent = text;
+  });
+}
+function startListening(handlers){
+  if(!SR){ handlers.onError && handlers.onError("unsupported"); return false; }
+  if(!isSecure){ handlers.onError && handlers.onError("insecure"); return false; }
+  stopListening();
+  voice.target = handlers;
+  voice.gotResult = false; voice.gotError = false;
+  const r = new SR();
+  r.lang = cfg().lang || "en-AU";
+  r.continuous = false; r.interimResults = true; r.maxAlternatives = 6;
+  r.onstart = () => setVoiceChip("listening", "Listening in Australian English…");
+  r.onresult = ev => {
+    let interim = "";
+    for(let i = ev.resultIndex; i < ev.results.length; i++){
+      const res = ev.results[i];
+      if(res.isFinal){
+        const alts = [];
+        for(let k=0;k<res.length;k++) alts.push(res[k].transcript);
+        voice.gotResult = true;
+        voice.target && voice.target.onResult && voice.target.onResult(alts);
+        return;
+      }
+      interim += res[0].transcript;
+    }
+    if(interim){ voice.gotResult = true; if(voice.target && voice.target.onInterim) voice.target.onInterim(interim); }
+  };
+  r.onerror = ev => { voice.gotError = true; voice.target && voice.target.onError && voice.target.onError(ev.error); };
+  r.onend = () => {
+    voice.active = false;
+    if(!voiceDeclaredBroken) setVoiceChip("ready", langLabel() + " voice recognition ready");
+    voice.target && voice.target.onEnd && voice.target.onEnd();
+  };
+  voice.rec = r;
+  try { r.start(); voice.active = true; return true; }
+  catch(e){ voice.active = false; handlers.onError && handlers.onError("busy"); return false; }
+}
+function stopListening(){
+  if(!voice.rec) return;
+  const r = voice.rec;
+  voice.rec = null; voice.target = null; voice.active = false;
+  try { r.onend = null; r.onresult = null; r.onerror = null; r.abort(); } catch(e){}
+}
+function langLabel(){
+  return ({ "en-AU":"Australian English", "en-NZ":"New Zealand English", "en-GB":"British English", "en-US":"US English" })[cfg().lang] || "English";
+}
+let ttsVoice = null;
+function pickVoice(){
+  if(!("speechSynthesis" in window)) return;
+  const list = speechSynthesis.getVoices() || [];
+  const want = (cfg().lang || "en-AU").toLowerCase();
+  ttsVoice = list.find(v => (v.lang||"").toLowerCase().replace("_","-") === want)
+          || list.find(v => (v.lang||"").toLowerCase().startsWith("en-au"))
+          || list.find(v => (v.lang||"").toLowerCase().startsWith("en-gb"))
+          || list.find(v => (v.lang||"").toLowerCase().startsWith("en")) || null;
+}
+if("speechSynthesis" in window){ speechSynthesis.onvoiceschanged = () => pickVoice(); }
+function speak(text, done){
+  const p = session.role === "student" ? P().prefs : null;
+  if(!p || !p.speak || !("speechSynthesis" in window)){ done && done(); return; }
+  /* Finishing has to be driven by the engine, not by a guess at how long the
+     text takes to say. A character count is badly wrong for this app: "132" is
+     three characters but eight syllables, so a length-based timer fires while
+     the voice is still mid-answer and the next question cancels it.
+
+     So: wait for onend, and keep a watchdog that only gives up once the engine
+     reports it is no longer speaking. A device with no voices never starts
+     speaking at all, and is released after a short grace period. */
+  let fired = false, sawSpeaking = false;
+  const startedAt = Date.now();
+  const finish = () => {
+    if(fired) return;
+    fired = true;
+    clearInterval(poll); clearTimeout(hardStop);
+    done && done();
+  };
+  const busy = () => {
+    try { return !!(window.speechSynthesis && (speechSynthesis.speaking || speechSynthesis.pending)); }
+    catch(e){ return false; }
+  };
+  const poll = setInterval(() => {
+    if(busy()){ sawSpeaking = true; return; }
+    // Not speaking. Either it finished without firing onend, or it never began.
+    if(sawSpeaking || Date.now() - startedAt > 1200) finish();
+  }, 120);
+  const hardStop = setTimeout(finish, 20000);   // an engine wedged mid-utterance
+  try{
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = cfg().lang || "en-AU";
+    if(ttsVoice) u.voice = ttsVoice;
+    u.rate = 0.95;
+    u.onend = finish;
+    u.onerror = finish;
+    speechSynthesis.speak(u);
+  } catch(e){ finish(); }
+}
+const spokenQuestion = q => `What is ${q.left} times ${q.right}?`;
+
+/* ==================================================================
+   9. DOM HELPERS
+   ================================================================== */
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+function modal(html, actions){
+  const host = $("modalHost");
+  host.innerHTML = "";
+  const bg = document.createElement("div"); bg.className = "modal-bg";
+  const box = document.createElement("div"); box.className = "modal"; box.innerHTML = html;
+  const row = document.createElement("div"); row.className = "row center"; row.style.marginTop = "18px";
+  (actions||[{label:"Close"}]).forEach(a => {
+    const b = document.createElement("button");
+    b.className = "btn " + (a.cls||""); b.textContent = a.label;
+    b.onclick = () => { host.innerHTML = ""; a.fn && a.fn(); };
+    row.appendChild(b);
+  });
+  box.appendChild(row); bg.appendChild(box); host.appendChild(bg);
+}
+function renderStoreNote(){
+  const n = $("storeNote");
+  if(!n) return;
+  if(remote()){
+    n.textContent = `Connected to the class server at ${location.host}. Accounts and progress are stored there and shared by every device.`;
+    return;
+  }
+  n.textContent = LocalAdapter.available
+    ? `Stored in this browser only. ${Store.db.students.length} of ${MAX_STUDENTS} student accounts and ${Store.db.teachers.length} of ${MAX_TEACHERS} teacher accounts in use.`
+    : "This browser is blocking saved data — changes will be lost when the tab closes. Export a backup.";
+}
+let syncNoteTimer = null;
+function setSyncNote(msg){
+  const chip = $("voiceStatus");
+  if(!chip) return;
+  clearTimeout(syncNoteTimer);
+  const before = chip.textContent;
+  chip.textContent = "Not saved to the server: " + msg;
+  syncNoteTimer = setTimeout(() => { chip.textContent = before; }, 6000);
+}
+
+/* ==================================================================
+   9b. CURFEW ENFORCEMENT
+   ================================================================== */
+let curfewTimer = null, curfewPoll = null, curfewShowing = false;
+/* Set when someone taps "I'm a teacher" on the closed screen. Without it the
+   watcher would slam the closed screen back over the sign-in form a second
+   later, and an exempt teacher could never get in. */
+let curfewTeacherEscape = false;
+function startCurfewWatch(){
+  stopCurfewWatch();
+  curfewTimer = setInterval(checkCurfew, 1000);         // 1s, so the grace countdown reads true
+  if(remote()){
+    curfewPoll = setInterval(refreshServerCurfew, 60000);
+    refreshServerCurfew();                             // don't wait a minute to find out
+  }
+  checkCurfew();
+}
+function stopCurfewWatch(){
+  clearInterval(curfewTimer); clearInterval(curfewPoll);
+  curfewTimer = curfewPoll = null;
+}
+async function refreshServerCurfew(){
+  if(!remote()) return;
+  try {
+    const r = await fetch("/api/public", { cache:"no-store" });
+    if(!r.ok) return;
+    const pub = await r.json();
+    if(pub && pub.curfew) serverCurfew = pub.curfew;     // the server's clock, not this device's
+    checkCurfew();
+  } catch(e){ /* offline: fall back to whatever we last heard */ }
+}
+function checkCurfew(){
+  const state = curfewNow();
+  if(!state.closed){
+    curfewTeacherEscape = false;
+    if(curfewShowing) location.reload();                 // 7am: come back to a clean app
+    const notice = $("curfewNotice");                    // don't leave last night's wording up
+    if(notice && notice.innerHTML && !$("authView").classList.contains("hide")) notice.innerHTML = curfewBannerHTML();
+    return;
+  }
+  if(!curfewAppliesTo(session.role)) return;             // teachers carry on, if exempt
+  // You cannot shut a school that does not exist yet. Without this, anyone
+  // installing the site after 8pm meets the closed screen before they have an
+  // account, and cannot get past it until morning. A solo learner counts as
+  // set up, so a home device is still closed overnight.
+  if(!(Store.db.teachers || []).length && !soloStudent()) return;
+  // nobody signed in, and a teacher has asked for the sign-in form: leave it alone
+  if(!session.role && curfewTeacherEscape && !curfewAppliesTo("teacher")) return;
+  if(pinChangeFor) return;                               // mid PIN change: let them finish
+
+  // A mastery test already running is allowed to finish, so the night does not
+  // cost a child their one attempt of the day.
+  const src = (remote() && serverCurfew) ? serverCurfew : cfg().curfew;
+  const graceOn  = src.graceForTestInProgress !== undefined ? src.graceForTestInProgress : true;
+  const graceMin = src.graceMinutes !== undefined ? src.graceMinutes : 5;
+
+  // Only a mastery test gets extra time. Practice stops the moment it is 8pm.
+  if(graceOn && graceMin > 0 && play.mode === "test" && play.test){
+    if(!play.graceUntil) play.graceUntil = Date.now() + graceMin*60000;
+    const msLeft = play.graceUntil - Date.now();
+    if(msLeft > 0){
+      play.curfewPending = true;
+      const box = $("readiness");
+      if(box){
+        box.classList.remove("ready");
+        const secs = Math.ceil(msLeft/1000);
+        const mm = Math.floor(secs/60), ss = String(secs % 60).padStart(2,"0");
+        box.textContent = `Closing time — finish this test within ${mm}:${ss}.`;
+      }
+      return;
+    }
+    // out of grace: the test ends here and the attempt is not charged
+  }
+  showCurfew(state);
+}
+function showCurfew(state){
+  curfewShowing = true;
+  // A test cut off by closing time should not cost the day's attempt.
+  if(play.mode === "test" && play.test && session.role === "student"){
+    try { P().lastTestStartedAt = 0; Store.patchStudent(me()); } catch(e){}
+  }
+  play.graceUntil = 0;
+  stopListening(); stopTimer();
+  if(typeof stopLiveUpdates === "function") stopLiveUpdates();
+  play.mode = "practice"; play.test = null; play.curfewPending = false;
+  if(remote() && ServerAdapter.token){
+    const t = ServerAdapter.token; ServerAdapter.token = null;
+    fetch(ServerAdapter.base + "/logout", { method:"POST", headers:{ Authorization:"Bearer " + t } }).catch(()=>{});
+  }
+  session = { role:null, id:null };
+  $("modalHost").innerHTML = "";
+  ["authView","studentView","teacherView"].forEach(id => $(id).classList.add("hide"));
+  $("curfewView").classList.remove("hide");
+  renderCurfewCard(state);
+}
+function renderCurfewCard(state){
+  const c = cfg().curfew;
+  state = state || curfewNow();
+  $("curfewBody").innerHTML =
+    `Morris Multi Maths closes at <b>${esc(state.closesAt || hourLabel(c.startHour))}</b> and opens again at ` +
+    `<b>${esc(state.opensAt || hourLabel(c.endHour))}</b>. Have a rest — your streak and your medals are all still here in the morning.`;
+  $("curfewCountdown").textContent = state.minutesLeft
+    ? `Opens again in ${waitLabel(state.minutesLeft)}`
+    : `Opens again at ${state.opensAt || hourLabel(c.endHour)}`;
+  const exempt = (state.teachersExempt !== undefined) ? state.teachersExempt : c.teachersExempt;
+  $("curfewTeacher").classList.toggle("hide", !exempt);
+  $("curfewFoot").textContent = remote()
+    ? "The closing time comes from the class server, not from this device."
+    : "This copy reads the clock on this device.";
+}
+function curfewBannerHTML(){
+  const c = cfg().curfew;
+  if(!c || !c.enabled) return "";
+  return `<div class="curfew-banner">Morris Multi Maths closes at ${esc(hourLabel(c.startHour))} and opens again at ${esc(hourLabel(c.endHour))}.</div>`;
+}
+
+/* ==================================================================
+   10. AUTH UI
+   ================================================================== */
+let signinStudentId = null, signinTeacherId = null, signinPin = "";
+let schoolSetupWanted = false;        // they chose "set up a school" over solo practice
+function showAuth(){
+  const state = curfewNow();
+  const unset = !(Store.db.teachers || []).length;
+  if(state.closed && !unset && curfewAppliesTo("teacher")){ showCurfew(state); return; }
+  curfewShowing = false;
+  $("curfewView").classList.add("hide");
+  $("authView").classList.remove("hide");
+  $("studentView").classList.add("hide");
+  $("teacherView").classList.add("hide");
+  $("chooseCard").classList.add("hide");
+  $("resumeCard").classList.add("hide");
+  const notice = $("curfewNotice");
+  if(notice) notice.innerHTML = state.closed
+    ? `<div class="curfew-banner">Morris Multi Maths closes at ${esc(hourLabel(cfg().curfew.startHour))} and opens again at ${esc(state.opensAt || hourLabel(cfg().curfew.endHour))}. Teachers can still sign in.</div>`
+    : curfewBannerHTML();
+  // Standalone, nobody has set anything up: offer solo practice first.
+  const solo = soloStudent();
+  const schoolExists = Store.db.teachers.length > 0;
+  if(!remote() && !schoolExists && !schoolSetupWanted){
+    if(solo){
+      $("resumeCard").classList.remove("hide");
+      $("resumeWho").textContent = `${solo.name} — your medals and streaks are where you left them.`;
+      $("setupCard").classList.add("hide"); $("signinCard").classList.add("hide");
+      return;
+    }
+    $("chooseCard").classList.remove("hide");
+    $("setupCard").classList.add("hide"); $("signinCard").classList.add("hide");
+    return;
+  }
+  const first = !schoolExists;
+  $("setupCard").classList.toggle("hide", !first);
+  $("signinCard").classList.toggle("hide", first);
+  if(!first) renderStudentPicker();
+}
+function renderStudentPicker(){
+  const sel = $("siYear");
+  sel.innerHTML = cfg().yearLevels.map(y => `<option value="${y}">Year ${y}</option>`).join("");
+  renderNameList();
+  renderTeacherNames();
+  sel.onchange = renderNameList;
+}
+let rosterCache = { year:null, list:[] };
+function renderTeacherNames(){
+  const list = (Store.db.teachers || []).slice().sort((a,b)=>a.name.localeCompare(b.name));
+  $("tiNames").innerHTML = list.length
+    ? list.map(t => `<button data-tid="${t.id}">${esc(t.name)}</button>`).join("")
+    : `<div class="note">No teacher accounts yet.</div>`;
+  $("tiNames").querySelectorAll("[data-tid]").forEach(b => b.onclick = () => {
+    signinTeacherId = b.dataset.tid;
+    $("tiNames").querySelectorAll("button").forEach(x => x.classList.remove("sel"));
+    b.classList.add("sel");
+    $("siErr").textContent = "";
+    $("tiPin").focus();
+  });
+}
+async function renderNameList(){
+  const year = parseInt($("siYear").value, 10);
+  let list;
+  if(remote()){
+    try { list = await ServerAdapter.request("/roster?year=" + year); }
+    catch(e){ list = []; $("siErr").textContent = "Couldn't reach the server."; }
+    rosterCache = { year, list };
+  } else {
+    list = studentsInYear(year).slice();
+  }
+  list = list.sort((a,b)=>a.name.localeCompare(b.name));
+  $("siNames").innerHTML = list.length
+    ? list.map(s => `<button data-sid="${s.id}">${esc(s.name)}</button>`).join("")
+    : `<div class="note">No student accounts in Year ${year} yet. Ask your teacher to add you.</div>`;
+  $("siNames").querySelectorAll("[data-sid]").forEach(b => b.onclick = () => {
+    signinStudentId = b.dataset.sid; signinPin = "";
+    $("siNames").querySelectorAll("button").forEach(x => x.classList.remove("sel"));
+    b.classList.add("sel");
+    const s = signinStudentName(signinStudentId);
+    $("siWho").textContent = s;
+    $("siPinWrap").classList.remove("hide");
+    $("siErr").textContent = "";
+    renderPinDots();
+  });
+  $("siPinWrap").classList.add("hide");
+}
+function renderPinDots(){
+  $("siPinDots").innerHTML = Array.from({length:Math.max(4, signinPin.length)},(_,i)=>`<i class="${i<signinPin.length?"on":""}"></i>`).join("");
+}
+function signinStudentName(id){
+  const local = Store.db.students.find(x => x.id === id);
+  if(local) return local.name;
+  const r = rosterCache.list.find(x => x.id === id);
+  return r ? r.name : "";
+}
+async function trySigninStudent(){
+  if(!signinStudentId) return;
+  const state = curfewNow();
+  if(state.closed && curfewAppliesTo("student")){ curfewTeacherEscape = false; showCurfew(state); return; }
+  if(remote()){
+    try {
+      const res = await apiPost("/login", { role:"student", id:signinStudentId, pin:signinPin });
+      ServerAdapter.token = res.token;
+      signinPin = ""; renderPinDots();
+      if(res.mustChangePin){ showPinChange("student", res.id, res.pinAgeDays); return; }
+      await refreshFromServer();
+      session = { role:"student", id:res.id };
+      enterStudent();
+    } catch(e){
+      $("siErr").textContent = e.status === 401 ? "That PIN doesn't match. Try again." : e.message;
+      signinPin = ""; renderPinDots();
+    }
+    return;
+  }
+  const s = Store.db.students.find(x => x.id === signinStudentId);
+  if(s && await verifyPin(s, signinPin)){
+    signinPin = ""; renderPinDots();
+    if(pinExpired(s)){ showPinChange("student", s.id, Math.floor(pinAgeDays(s))); return; }
+    session = { role:"student", id:s.id };
+    enterStudent();
+  } else {
+    $("siErr").textContent = "That PIN doesn't match. Try again.";
+    signinPin = ""; renderPinDots();
+  }
+}
+async function trySigninTeacher(){
+  const pin = $("tiPin").value;
+  const state = curfewNow();
+  if(state.closed && curfewAppliesTo("teacher")){ showCurfew(state); return; }
+  if(!signinTeacherId){ $("siErr").textContent = "Tap your name first."; return; }
+  if(remote()){
+    try {
+      const res = await apiPost("/login", { role:"teacher", id:signinTeacherId, pin });
+      ServerAdapter.token = res.token;
+      $("tiPin").value = "";
+      if(res.mustChangePin){ showPinChange("teacher", res.id, res.pinAgeDays); return; }
+      await refreshFromServer();
+      session = { role:"teacher", id:res.id };
+      enterTeacher();
+    } catch(e){ $("siErr").textContent = e.status === 401 ? "That PIN doesn't match." : e.message; }
+    return;
+  }
+  const t = Store.db.teachers.find(x => x.id === signinTeacherId);
+  if(t && await verifyPin(t, pin)){
+    $("tiPin").value = "";
+    if(pinExpired(t)){ showPinChange("teacher", t.id, Math.floor(pinAgeDays(t))); return; }
+    session = { role:"teacher", id:t.id };
+    enterTeacher();
+  } else {
+    $("siErr").textContent = "That PIN doesn't match.";
+  }
+}
+let pinChangeFor = null;        // {role, id, account?} awaiting a new PIN
+function showPinChange(role, id, ageDays){
+  pinChangeFor = { role, id };
+  ["authView","studentView","teacherView","curfewView"].forEach(x => $(x).classList.add("hide"));
+  $("pinChangeView").classList.remove("hide");
+  const name = role === "teacher"
+    ? ((Store.db.teachers.find(t => t.id === id) || {}).name || "")
+    : signinStudentName(id);
+  $("pinWho").textContent = name;
+  const max = cfg().pinMaxAgeDays || 90;
+  $("pinWhy").textContent = ageDays
+    ? `PINs are changed every ${max} days. Yours is ${ageDays} days old, so pick a new one before you carry on.`
+    : `PINs are changed every ${max} days, and yours is due. Pick a new one before you carry on.`;
+  $("pinNew").value = ""; $("pinNew2").value = ""; $("pinErr").textContent = "";
+  $("pinNew").focus();
+}
+async function submitPinChange(){
+  const pin = $("pinNew").value.trim(), again = $("pinNew2").value.trim();
+  $("pinErr").textContent = "";
+  if(!validPin(pin)){ $("pinErr").textContent = "PINs must be 4–8 digits."; return; }
+  if(pin !== again){ $("pinErr").textContent = "The two PINs don't match."; return; }
+  try {
+    if(remote()){
+      const res = await apiPost("/pin/self", { pin });
+      ServerAdapter.token = res.token;
+      await refreshFromServer();
+      session = { role: pinChangeFor.role, id: pinChangeFor.id };
+    } else {
+      const acct = pinChangeFor.role === "teacher"
+        ? Store.db.teachers.find(t => t.id === pinChangeFor.id)
+        : Store.db.students.find(x => x.id === pinChangeFor.id);
+      if(await pinReused(acct, pin)){ $("pinErr").textContent = "Choose a PIN you haven't used recently."; return; }
+      await applyNewPin(acct, pin);
+      Store.persist();
+      session = { role: pinChangeFor.role, id: pinChangeFor.id };
+    }
+  } catch(e){
+    $("pinErr").textContent = e.message || "That didn't work. Try a different PIN.";
+    return;
+  }
+  pinChangeFor = null;
+  $("pinChangeView").classList.add("hide");
+  session.role === "teacher" ? enterTeacher() : enterStudent();
+}
+
+function signOut(){
+  curfewTeacherEscape = false;
+  stopListening(); stopTimer();
+  stopLiveUpdates();
+  play.mode = "practice"; play.test = null;
+  session = { role:null, id:null };
+  pinChangeFor = null;
+  $("pinChangeView").classList.add("hide");
+  signinStudentId = null; signinTeacherId = null; signinPin = "";
+  if(remote()){
+    const t = ServerAdapter.token;
+    ServerAdapter.token = null;
+    if(t) fetch(ServerAdapter.base + "/logout", { method:"POST", headers:{ Authorization:"Bearer " + t } }).catch(()=>{});
+    Store.db = migrate({ config: Store.db.config });
+  }
+  showAuth();
+}
+
+/* ==================================================================
+   11. KEYPADS
+   ================================================================== */
+const typedBuf = { play:"" };
+function buildKeypads(){
+  document.querySelectorAll("[data-kp]").forEach(pad => {
+    const which = pad.dataset.kp;
+    pad.innerHTML = "";
+    ["1","2","3","4","5","6","7","8","9","clear","0","enter"].forEach(k => {
+      const b = document.createElement("button");
+      b.className = (k === "clear" || k === "enter") ? "act" : "";
+      b.textContent = k === "clear" ? "⌫" : (k === "enter" ? "Enter" : k);
+      b.onclick = () => which === "signin" ? signinKey(k) : playKey(k);
+      pad.appendChild(b);
+    });
+  });
+}
+function signinKey(k){
+  if(k === "clear") signinPin = signinPin.slice(0,-1);
+  else if(k === "enter") return trySigninStudent();
+  else if(signinPin.length < 8) signinPin += k;
+  renderPinDots();
+  if(signinPin.length >= 4 && k !== "clear"){ /* wait for Enter */ }
+}
+function playKey(k){
+  if(k === "clear") typedBuf.play = typedBuf.play.slice(0,-1);
+  else if(k === "enter"){
+    const v = parseInt(typedBuf.play, 10);
+    typedBuf.play = ""; $("typed").textContent = " ";
+    if(!isNaN(v)) play.submit(v, String(v), "keypad");
+    return;
+  }
+  else if(typedBuf.play.length < 4) typedBuf.play += k;
+  $("typed").textContent = typedBuf.play || " ";
+}
+document.addEventListener("keydown", e => {
+  if(session.role === "student" && $("stu-play").classList.contains("active")){
+    if(/^[0-9]$/.test(e.key)){ playKey(e.key); $("keypadWrap").classList.add("open"); e.preventDefault(); }
+    else if(e.key === "Backspace"){ playKey("clear"); e.preventDefault(); }
+    else if(e.key === "Enter" && typedBuf.play){ playKey("enter"); e.preventDefault(); }
+    else if(e.key === " "){ play.listen(); e.preventDefault(); }
+    return;
+  }
+  if(!$("authView").classList.contains("hide") && signinStudentId && !$("siPinWrap").classList.contains("hide")){
+    if(/^[0-9]$/.test(e.key)){ signinKey(e.key); e.preventDefault(); }
+    else if(e.key === "Backspace"){ signinKey("clear"); e.preventDefault(); }
+    else if(e.key === "Enter"){ signinKey("enter"); e.preventDefault(); }
+  }
+});
+
+/* ==================================================================
+   12. QUESTION TIMER (test mode only)
+   ================================================================== */
+const CIRC = 2 * Math.PI * 66;
+const timer = { raf:null, endsAt:0, onExpire:null, running:false };
+function startTimer(seconds, onExpire){
+  stopTimer();
+  timer.running = true;
+  timer.endsAt = Date.now() + seconds*1000;
+  timer.onExpire = onExpire;
+  $("ring").classList.remove("hide","warn","crit");
+  $("clock").classList.remove("hide","crit");
+  $("ringProg").style.strokeDasharray = CIRC;
+  const tick = () => {
+    if(!timer.running) return;
+    const left = Math.max(0, timer.endsAt - Date.now());
+    const frac = left / (seconds*1000);
+    $("ringProg").style.strokeDashoffset = String(CIRC * (1 - frac));
+    const secs = Math.ceil(left/1000);
+    $("clock").textContent = secs;
+    $("ring").classList.toggle("warn", frac <= 0.5 && frac > 0.25);
+    $("ring").classList.toggle("crit", frac <= 0.25);
+    $("clock").classList.toggle("crit", frac <= 0.25);
+    if(left <= 0){
+      const fn = timer.onExpire;
+      stopTimer();
+      fn && fn();
+      return;
+    }
+    timer.raf = requestAnimationFrame(tick);
+  };
+  tick();
+}
+function stopTimer(){
+  timer.running = false; timer.onExpire = null;
+  if(timer.raf) cancelAnimationFrame(timer.raf);
+  timer.raf = null;
+  const r = $("ring"), c = $("clock");
+  if(r) r.classList.add("hide");
+  if(c) c.classList.add("hide");
+}
+
+/* ==================================================================
+   13. PLAY (practice + test)
+   ================================================================== */
+const play = {
+  mode:"practice", q:null, awaiting:false, test:null,
+  sCorrect:0, sTotal:0, run:0, advanceSeq:0,
+  singleTable:5, singleOrder:"shuffle", singleQueue:[], singlePass:{}, singlePasses:0,
+  graceUntil:0,
+
+  enter(){
+    this.mode = "practice"; this.test = null;
+    this.sCorrect = 0; this.sTotal = 0; this.run = 0;
+    this.advanceSeq++;
+    const prefs = P().prefs;
+    this.singleTable = prefs.singleTable || 5;
+    this.singleOrder = prefs.singleOrder || "shuffle";
+    this.singleQueue = []; this.singlePass = {}; this.singlePasses = 0;
+    stopTimer();
+    this.newQuestion();
+  },
+  setMode(mode){
+    if(mode === this.mode) return;
+    if(mode === "test"){ this.startTest(); return; }   // async; guards inside
+    stopTimer(); stopListening();
+    this.advanceSeq++;
+    this.test = null;
+    this.mode = mode;
+    if(mode === "single"){ this.singleQueue = []; this.singlePass = {}; this.singlePasses = 0; this.nextSingle(); }
+    else this.newQuestion();
+  },
+  /* ---------- one table at a time ---------- */
+  setTable(t){
+    this.singleTable = t;
+    P().prefs.singleTable = t;
+    Store.patchStudent(me());
+    this.singleQueue = []; this.singlePass = {}; this.singlePasses = 0;
+    this.advanceSeq++;
+    if(this.mode !== "single") this.setMode("single");
+    else this.nextSingle();
+  },
+  setOrder(order){
+    this.singleOrder = order;
+    P().prefs.singleOrder = order;
+    Store.patchStudent(me());
+    this.singleQueue = []; this.singlePass = {};
+    this.advanceSeq++;
+    this.nextSingle();
+  },
+  refillQueue(){
+    const ms = MULTIPLIERS.slice();
+    if(this.singleOrder === "shuffle"){
+      for(let i = ms.length - 1; i > 0; i--){
+        const j = Math.floor(Math.random() * (i + 1));
+        [ms[i], ms[j]] = [ms[j], ms[i]];
+      }
+    }
+    this.singleQueue = ms;
+  },
+  nextSingle(){
+    stopTimer();
+    this.advanceSeq++;
+    if(!this.singleQueue.length){
+      const finished = Object.keys(this.singlePass).length === MULTIPLIERS.length;
+      if(finished){
+        this.singlePasses++;
+        const right = Object.values(this.singlePass).filter(Boolean).length;
+        this.singlePass = {};
+        this.refillQueue();
+        showPassSummary(this.singleTable, right, MULTIPLIERS.length, this.singlePasses);
+        return;                                    // the modal button starts the next pass
+      }
+      this.refillQueue();
+      this.singlePass = {};
+    }
+    const m = this.singleQueue.shift();
+    const t = this.singleTable;
+    this.q = { key: factKey(t, m), a:t, b:m, left:t, right:m, answer:t*m, revision:false, single:true };
+    this.awaiting = true;
+    typedBuf.play = ""; $("typed").textContent = " ";
+    $("feedback").textContent = ""; $("feedback").className = "feedback";
+    $("transcript").textContent = "";
+    $("micBtn").disabled = false;
+    $("micBtn").classList.remove("listening","err");
+    this.renderStage();
+    const go = () => { if(play.awaiting && P().prefs.autoListen) play.listen(); };
+    P().prefs.speak ? speak(spokenQuestion(this.q), go) : go();
+  },
+  /* ---------- practice ---------- */
+  newQuestion(){
+    stopTimer();
+    this.advanceSeq++;
+    this.q = nextQuestion(P().currentLevel);
+    this.awaiting = true;
+    typedBuf.play = ""; $("typed").textContent = " ";
+    $("feedback").textContent = ""; $("feedback").className = "feedback";
+    $("transcript").textContent = "";
+    $("micBtn").disabled = false;
+    $("micBtn").classList.remove("listening","err");
+    this.renderStage();
+    const go = () => { if(play.awaiting && P().prefs.autoListen) play.listen(); };
+    P().prefs.speak ? speak(spokenQuestion(this.q), go) : go();
+  },
+  /* ---------- test ---------- */
+  async startTest(){
+    const lvl = P().currentLevel;
+    const lock = testLock();
+    if(lock.locked){ showLockedModal(lock); return; }
+    if(remote()){
+      try {
+        const res = await apiPost("/test/start", {});
+        P().lastTestStartedAt = res.startedAt;
+      } catch(e){
+        if(e.status === 423 && e.body && e.body.until){
+          P().lastTestStartedAt = e.body.until - (cfg().testLockHours*3600e3);
+          showLockedModal(testLock());
+          renderAll();
+          return;
+        }
+        modal(`<h2>Couldn't start the test</h2><p class="note">${esc(e.message)}</p>`);
+        return;
+      }
+    } else {
+      P().lastTestStartedAt = Date.now();
+      Store.patchStudent(me());
+    }
+    this.mode = "test";
+    this.test = { set: buildTestSet(lvl, cfg().testLength), i:0, results:[], level:lvl };
+    renderLevelCards();
+    this.askTest();
+  },
+  askTest(){
+    const t = this.test;
+    this.q = t.set[t.i];
+    this.awaiting = true;
+    typedBuf.play = ""; $("typed").textContent = " ";
+    $("feedback").textContent = ""; $("feedback").className = "feedback";
+    $("transcript").textContent = "";
+    $("micBtn").disabled = false;
+    $("micBtn").classList.remove("listening","err");
+    this.renderStage();
+    const go = () => {
+      if(!play.awaiting || play.mode !== "test") return;
+      startTimer(cfg().testSeconds, () => play.timeout());
+      if(P().prefs.autoListen) play.listen();
+    };
+    P().prefs.speak ? speak(spokenQuestion(this.q), go) : go();
+  },
+  timeout(){
+    if(!this.awaiting) return;
+    this.awaiting = false;
+    stopListening();
+    $("micBtn").disabled = true;
+    $("transcript").innerHTML = `<b>Time's up</b> — ${cfg().testSeconds} seconds`;
+    this.finishAnswer(null, "—", "timeout", false);
+  },
+  listen(){
+    if(!this.awaiting) return;
+    $("micBtn").classList.add("listening");
+    const target = this.q.answer;
+    const ok = startListening({
+      onInterim: t => { $("transcript").textContent = `“${t}”`; },
+      onResult: alts => {
+        silentRounds = 0;
+        const j = judgeSpeech(alts, target);
+        if(j.value === null){
+          $("transcript").innerHTML = `Heard <b>“${esc(j.said)}”</b> — that wasn't a number. Say again or use the keypad.`;
+          $("micBtn").classList.remove("listening");
+          return;
+        }
+        play.submit(j.value, j.said, "voice");
+      },
+      onError: err => { if(err !== "no-speech") silentRounds = 0; play.micError(err); },
+      onEnd: () => {
+        $("micBtn").classList.remove("listening");
+        if(voice.gotResult === false && voice.gotError === false){
+          // started and ended without a result or an error: the hallmark of a
+          // browser that pretends to support recognition
+          if(++silentRounds >= 2){
+            markVoiceBroken(isEdge
+              ? "Microsoft Edge starts listening but never returns an answer. Use Chrome or Safari, or keep using the keypad."
+              : "This browser starts listening but returns nothing. Use Chrome or Safari, or keep using the keypad.");
+          }
+        }
+      }
+    });
+    if(!ok) $("micBtn").classList.remove("listening");
+  },
+  micError(err){
+    $("micBtn").classList.remove("listening");
+    const msgs = {
+      "not-allowed":"Microphone blocked — allow it in the address bar, or use the keypad.",
+      "service-not-allowed":"Microphone blocked by the browser. Use the keypad.",
+      "no-speech":"Didn't hear anything — tap the mic and try again.",
+      "audio-capture":"No microphone found. Use the keypad.",
+      "network":"Speech service unreachable. Use the keypad.",
+      "insecure":"Voice needs http://localhost or https. Use the keypad.",
+      "unsupported":"This browser has no speech recognition. Use the keypad.",
+      "aborted":"", "busy":""
+    };
+    const m = msgs[err] !== undefined ? msgs[err] : "Microphone problem — use the keypad.";
+    if(m){ $("transcript").textContent = m; setVoiceChip("error", m); }
+    if(["not-allowed","insecure","unsupported","audio-capture","service-not-allowed"].includes(err)){
+      $("keypadWrap").classList.add("open");
+      $("micBtn").classList.add("err");
+    }
+  },
+  submit(value, said, source){
+    if(!this.awaiting) return;
+    this.awaiting = false;
+    stopTimer(); stopListening();
+    $("micBtn").disabled = true;
+    $("transcript").innerHTML = source === "voice" ? `Heard: <b>“${esc(said)}”</b>` : `You typed <b>${esc(said)}</b>`;
+    this.finishAnswer(value, said, source, value === this.q.answer);
+  },
+  finishAnswer(value, said, source, correct){
+    const q = this.q;
+    const levelId = this.mode === "test" ? this.test.level
+                  : this.mode === "single" ? (levelOfTable(q.a) || P().currentLevel)
+                  : P().currentLevel;
+    if(this.mode === "single") this.singlePass[q.b] = correct;
+    recordAnswer(levelId, q, correct, this.mode);
+    this.sTotal++;
+    if(correct){ this.sCorrect++; this.run++; } else this.run = 0;
+
+    const fb = $("feedback");
+    if(correct){ fb.textContent = "Correct! ⭐"; fb.className = "feedback correct"; }
+    else if(source === "timeout"){ fb.textContent = `Out of time. ${q.left} × ${q.right} = ${q.answer}.`; fb.className = "feedback incorrect"; }
+    else { fb.textContent = `Not quite. ${q.left} × ${q.right} = ${q.answer}.`; fb.className = "feedback incorrect"; }
+
+    if(this.mode === "practice" || this.mode === "single"){
+      const mode = this.mode;
+      const seq = ++this.advanceSeq;
+      const advance = () => {
+        if(seq !== play.advanceSeq || play.mode !== mode) return;   // superseded by a skip, mode change or sign-out
+        mode === "single" ? play.nextSingle() : play.newQuestion();
+      };
+      if(P().prefs.speak){
+        // Wait for the spoken feedback to finish. Starting the next question
+        // calls speechSynthesis.cancel(), which used to cut the answer off
+        // halfway through — so the pause has to be driven by the utterance,
+        // not by a fixed timer.
+        speak(correct ? "Correct" : `${q.left} times ${q.right} is ${q.answer}`,
+              () => setTimeout(advance, correct ? 250 : 550));
+      } else {
+        setTimeout(advance, correct ? 950 : 2000);
+      }
+    } else {
+      this.test.results.push({ q, given:value, correct, source });
+      this.test.i++;
+      setTimeout(() => {
+        if(play.mode !== "test") return;
+        if(play.test.i >= play.test.set.length) play.finishTest();
+        else play.askTest();
+      }, correct ? 600 : 1200);
+    }
+    this.renderStage();
+    renderLevelCards();
+  },
+  abandon(){
+    stopTimer(); stopListening();
+    this.mode = "practice"; this.test = null;
+    this.newQuestion();
+  },
+  curfewPending: false,
+  finishTest(){
+    stopTimer(); stopListening();
+    const t = this.test;
+    const score = t.results.filter(r => r.correct).length;
+    const res = recordTest(t.level, score, t.set.length);
+    const wrong = t.results.filter(r => !r.correct);
+    const timedOut = t.results.filter(r => r.source === "timeout").length;
+    this.mode = "practice"; this.test = null;
+    renderAll();
+    if(this.curfewPending){                       // the night caught them mid-test
+      this.curfewPending = false;
+      this.graceUntil = 0;
+      setTimeout(() => checkCurfew(), 6000);      // let them read the result first
+    }
+    modal(
+      `<div class="big">${res.perfect ? (res.mastered ? "🏆" : "🎯") : (score/t.set.length >= 0.9 ? "👏" : "💪")}</div>
+       <h2 style="text-align:center">${res.perfect ? "Perfect test!" : `${score} out of ${t.set.length}`}</h2>
+       <p class="note" style="text-align:center">${
+         res.mastered
+           ? `${levelById(t.level).name} mastered — ${cfg().requiredStreak} perfect tests in a row.${res.unlocked ? ` ${levelById(res.unlocked).name} is now unlocked, and ${levelById(t.level).name} facts stay in your practice.` : " That's every level!"}`
+           : res.perfect
+             ? `Mastery streak: ${res.streak} of ${cfg().requiredStreak}.`
+             : `A mastery test must be flawless, so the streak resets to zero.${timedOut ? ` ${timedOut} question${timedOut===1?"":"s"} ran out of time.` : ""}`
+       }</p>
+       <div style="text-align:center;margin:12px 0"><span class="streak-dots">${streakDots(t.level)}</span></div>
+       ${wrong.length ? `<h3 style="font-size:.95rem;margin:14px 0 8px">Facts to work on</h3>
+         <div class="note">${wrong.map(r => `${r.q.left} × ${r.q.right} = <b>${r.q.answer}</b> <span style="opacity:.7">(${r.source === "timeout" ? "timed out" : "said " + r.given})</span>`).join("<br>")}</div>` : ""}`,
+      [ { label:"Keep practising", cls:"primary", fn:() => play.newQuestion() },
+        { label:"Another test", fn:() => play.startTest() } ]
+    );
+  },
+  renderStage(){
+    const q = this.q;
+    const lvl = levelById(P().currentLevel);
+    $("equation").innerHTML = q ? `${q.left} <span class="op">×</span> ${q.right} <span class="op">=</span> <span class="q">?</span>` : "";
+    if(this.mode === "test"){
+      $("eyebrow").textContent = `${lvl.name} mastery test`;
+      $("prompt").textContent = `Question ${this.test.i+1} of ${this.test.set.length} — ${cfg().testSeconds} seconds to answer.`;
+      const done = this.test.results.length, right = this.test.results.filter(r=>r.correct).length;
+      $("tablePicker").classList.add("hide");
+      $("modeSingle").classList.remove("active");
+      $("readiness").classList.toggle("ready", done === right);
+      $("readiness").textContent = done === right
+        ? `Perfect so far — ${right}/${done || 0} correct.`
+        : `${right}/${done} correct — this test can no longer count towards mastery.`;
+      $("levelCards").style.opacity = ".5";
+      $("levelCards").style.pointerEvents = "none";
+      $("btnSkip").classList.add("hide");
+      $("btnQuit").classList.remove("hide");
+      $("modePractice").classList.remove("active");
+      $("modeTest").classList.add("active");
+      $("testDots").innerHTML = this.test.set.map((_,k) => {
+        const r = this.test.results[k];
+        return `<i class="${r ? (r.correct ? "ok":"no") : (k === this.test.i ? "now":"")}"></i>`;
+      }).join("");
+    } else if(this.mode === "single"){
+      const t = this.singleTable;
+      const owner = levelOfTable(t);
+      $("eyebrow").textContent = `The ${t} times table` + (owner ? ` · ${levelById(owner).name}` : "");
+      const left = this.singleQueue.length;
+      $("prompt").textContent = this.singleOrder === "order"
+        ? `Working through in order — ${MULTIPLIERS.length - left} of ${MULTIPLIERS.length}.`
+        : `Shuffled — ${left} to go in this round.`;
+      $("btnSkip").classList.remove("hide");
+      $("btnQuit").classList.add("hide");
+      $("modePractice").classList.remove("active");
+      $("modeSingle").classList.add("active");
+      $("modeTest").classList.remove("active");
+      $("testDots").innerHTML = "";
+      $("tablePicker").classList.remove("hide");
+      $("levelCards").style.opacity = "";
+      $("levelCards").style.pointerEvents = "";
+      renderTablePicker();
+      renderReadiness();
+    } else {
+      $("eyebrow").textContent = `${lvl.name} practice${q && q.revision ? " · revision" : ""}`;
+      $("prompt").textContent = "Press the microphone and say the answer.";
+      $("levelCards").style.opacity = "";
+      $("levelCards").style.pointerEvents = "";
+      $("tablePicker").classList.add("hide");
+      $("modeSingle").classList.remove("active");
+      renderReadiness();
+      $("btnSkip").classList.remove("hide");
+      $("btnQuit").classList.add("hide");
+      $("modePractice").classList.add("active");
+      $("modeTest").classList.remove("active");
+      $("testDots").innerHTML = "";
+    }
+    const acc = this.sTotal ? Math.round(this.sCorrect/this.sTotal*100) : 0;
+    $("sCorrect").textContent = this.sCorrect;
+    $("sTotal").textContent = this.sTotal;
+    $("sAcc").textContent = acc + "%";
+    $("sStreak").textContent = `${P().levels[P().currentLevel].streak} / ${cfg().requiredStreak}`;
+  }
+};
+
+/* ==================================================================
+   14. STUDENT RENDERING
+   ================================================================== */
+function renderTablePicker(){
+  const cur = play.singleTable;
+  $("tableChips").innerHTML = MULTIPLIERS.map(t => {
+    const owner = levelOfTable(t);
+    return `<button class="chip-btn ${t===cur?"on":""}" data-table="${t}">×${t}${
+      owner ? `<i class="pip ${owner}"></i>` : ""}</button>`;
+  }).join("");
+  $("tableChips").querySelectorAll("[data-table]").forEach(b =>
+    b.onclick = () => play.setTable(parseInt(b.dataset.table,10)));
+  $("orderShuffle").classList.toggle("on", play.singleOrder === "shuffle");
+  $("orderInOrder").classList.toggle("on", play.singleOrder === "order");
+  const pass = play.singlePass;
+  $("tableStrip").innerHTML = MULTIPLIERS.map(m => {
+    const state = m in pass ? (pass[m] ? "ok" : "no") : (play.q && play.q.b === m ? "now" : "");
+    return `<i class="${state}" title="${play.singleTable} × ${m}">${m}</i>`;
+  }).join("");
+}
+function showPassSummary(table, right, total, passes){
+  const perfect = right === total;
+  modal(`<div class="big">${perfect ? "🌟" : right >= total - 2 ? "👍" : "💪"}</div>
+    <h2 style="text-align:center">The ${table} times table — ${right} of ${total}</h2>
+    <p class="note" style="text-align:center">${
+      perfect ? `Every one right. That's ${passes} clean run${passes===1?"":"s"} of the ${table}s.`
+              : `Round ${passes} done. The ones you missed will come round again.`}</p>`,
+    [ { label:"Go again", cls:"primary", fn:() => play.nextSingle() },
+      { label:"Pick another table", fn:() => { $("tablePicker").classList.remove("hide"); play.nextSingle(); } } ]);
+}
+function showLockedModal(lock){
+  modal(`<div class="big">⏳</div>
+    <h2 style="text-align:center">One test a day</h2>
+    <p class="note" style="text-align:center">You've already used today's mastery test.
+      The next one unlocks in <b>${formatWait(lock.msLeft)}</b>, at
+      ${new Date(lock.until).toLocaleTimeString("en-AU",{hour:"numeric",minute:"2-digit"})}
+      on ${new Date(lock.until).toLocaleDateString("en-AU",{weekday:"long",day:"numeric",month:"long"})}.
+      Practice is always open — use it to clear your shaky facts.</p>`,
+    [ { label:"Keep practising", cls:"primary", fn:() => { play.setMode("practice"); } } ]);
+}
+function streakDots(levelId){
+  const need = cfg().requiredStreak, have = P().levels[levelId].streak;
+  return Array.from({length:need},(_,i)=>`<i class="${i<have?"on":""}"></i>`).join("");
+}
+function unlockedLevels(){
+  const out = [];
+  for(let i=0;i<LEVELS.length;i++){
+    if(i === 0 || P().levels[LEVELS[i-1].id].mastered) out.push(LEVELS[i].id);
+    else break;
+  }
+  return out;
+}
+function renderLevelCards(){
+  const unlocked = unlockedLevels(), cur = P().currentLevel;
+  $("levelCards").innerHTML = LEVELS.map(l => {
+    const d = P().levels[l.id];
+    const isUnlocked = unlocked.includes(l.id), active = l.id === cur;
+    const pct = d.mastered ? 100 : Math.round(d.streak / cfg().requiredStreak * 100);
+    return `<button class="level ${active?"active":""} ${isUnlocked?"":"locked"}" ${isUnlocked?"":"disabled"} data-lvl="${l.id}">
+      <span class="level-name"><span class="pip ${l.id}"></span>${l.name}</span>
+      <span class="level-tables">×${l.tables.join(", ×")}</span>
+      <div class="level-progress"><span style="width:${pct}%"></span></div>
+      <span class="badge ${d.mastered?"ok":(isUnlocked?(active?"":"mute"):"mute")}">${d.mastered?"MASTERED":!isUnlocked?"LOCKED":active?"CURRENT":"AVAILABLE"}</span>
+    </button>`;
+  }).join("");
+  $("levelCards").querySelectorAll("[data-lvl]").forEach(b => b.onclick = () => {
+    if(play.mode === "test") return;
+    P().currentLevel = b.dataset.lvl;
+    Store.patchStudent(me());
+    play.sCorrect = 0; play.sTotal = 0;
+    play.mode = "practice";                      // picking a level means mixed practice
+    renderAll();
+    play.newQuestion();
+  });
+}
+function renderReadiness(){
+  const lvl = P().currentLevel;
+  const r = readiness(lvl);
+  const d = P().levels[lvl];
+  const box = $("readiness");
+  const lock = testLock();
+  if(lock.locked){
+    box.classList.remove("ready");
+    box.textContent = `Today's test is done — the next one unlocks in ${formatWait(lock.msLeft)}.`;
+  } else {
+    box.classList.toggle("ready", r.ready || d.mastered);
+    box.textContent = d.mastered
+      ? "✓ Level mastered — these facts stay in your practice."
+      : r.ready ? "✓ You look ready for a mastery test."
+      : `Getting ready — ${r.met} of ${r.total} signs met.`;
+  }
+  $("modeTest").textContent = lock.locked ? "Mastery test 🔒" : "Mastery test";
+  $("readyChecks").innerHTML = `<div class="note" style="margin-top:4px">${
+    r.checks.map(c => `<div style="display:flex;gap:8px;align-items:center;${c.met?"color:var(--ink)":""}">
+      <span style="width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:.65rem;font-weight:900;
+        background:${c.met?"var(--success)":"var(--line)"};color:${c.met?"#fff":"var(--faint)"}">${c.met?"✓":"·"}</span>
+      ${c.label}<span style="margin-left:auto;color:var(--faint)">${c.val}</span></div>`).join("")
+  }</div>`;
+}
+function renderLevelProgress(){
+  const lvl = P().currentLevel, l = levelById(lvl), d = P().levels[lvl];
+  const pct = d.mastered ? 100 : Math.round(d.streak / cfg().requiredStreak * 100);
+  $("progressBar").style.width = pct + "%";
+  $("progressBar").parentElement.className = "line" + (d.mastered ? " ok" : "");
+  const keys = factsForLevel(lvl);
+  const solid = keys.filter(k => factScore(k) >= 0.8).length;
+  $("progressText").innerHTML =
+    `<strong>${l.name}</strong> — tables ${l.tables.join(", ")}. ${d.streak}/${cfg().requiredStreak} perfect tests · ${solid}/${keys.length} facts locked in.
+     <div style="margin-top:8px"><span class="streak-dots">${streakDots(lvl)}</span></div>`;
+  $("rulesNote").innerHTML = `
+    <p><strong>Mixed practice:</strong> untimed. Questions are randomised from your level, with ${Math.round(cfg().mixRatio*100)}% drawn from levels you've already mastered.</p>
+    <p><strong>One table:</strong> untimed drill of a single table, ×1 to ×12, shuffled or in order. It still counts towards your practice record and test readiness.</p>
+    <p><strong>Test:</strong> ${cfg().testLength} questions, <strong>${cfg().testSeconds} seconds each</strong>. Running out of time counts as wrong. You must score ${cfg().testLength}/${cfg().testLength}.</p>
+    <p><strong>Mastery:</strong> ${cfg().requiredStreak} perfect tests in a row unlocks the next level. One slip resets the run to zero.</p>
+    <p><strong>Suggestion:</strong> the site watches your practice and tells you when five readiness signs are met.</p>`;
+}
+function heatClass(key){
+  const f = P().facts[key];
+  if(!f || !f.seen) return "";
+  const s = factScore(key);
+  return s < 0.45 ? "s1" : s < 0.7 ? "s2" : s < 0.9 ? "s3" : "s4";
+}
+function renderProgressScreen(){
+  let html = "";
+  unlockedLevels().forEach(id => {
+    const l = levelById(id);
+    html += `<div style="margin-top:14px;font-weight:800;display:flex;align-items:center;gap:8px"><span class="pip ${id}"></span>${l.name}</div>
+      <div class="heat"><table><thead><tr><th></th>${MULTIPLIERS.map(m=>`<th>${m}</th>`).join("")}</tr></thead><tbody>`;
+    l.tables.forEach(t => {
+      html += `<tr><th>×${t}</th>` + MULTIPLIERS.map(m => {
+        const k = factKey(t,m), f = P().facts[k];
+        return `<td class="${heatClass(k)}" title="${t} × ${m} = ${t*m}${f?` — ${f.correct}/${f.seen} right`:" — not seen yet"}">${t*m}</td>`;
+      }).join("") + `</tr>`;
+    });
+    html += `</tbody></table></div>`;
+  });
+  $("heatWrap").innerHTML = html;
+
+  const trouble = Object.keys(P().facts)
+    .filter(k => P().facts[k].seen >= 2 && factScore(k) < 0.75)
+    .sort((a,b) => factScore(a) - factScore(b)).slice(0,12);
+  $("troubleList").innerHTML = trouble.length
+    ? trouble.map(k => { const [a,b] = k.split("x").map(Number), f = P().facts[k];
+        return `${a} × ${b} = <b>${a*b}</b> <span style="opacity:.7">${f.correct}/${f.seen} right</span>`; }).join("<br>")
+    : "Nothing shaky right now 🎉";
+
+  const days = licenceDays(), target = cfg().licenceTargetDays;
+  $("licenceStatus").textContent = licenceText();
+  $("licenceBar").style.width = Math.min(100, Math.round(days/target*100)) + "%";
+  $("licenceBar").parentElement.className = "line" + (days >= target ? " ok" : " warn");
+  $("licenceNote").textContent = `A practice day is counted when you answer at least one practice question. The window is the most recent ${cfg().licenceWindowDays} days.`;
+
+  const h = P().history.slice().reverse().slice(0,20);
+  $("histTable").innerHTML = h.length
+    ? `<thead><tr><th>When</th><th>Level</th><th>Score</th><th>Streak after</th></tr></thead><tbody>` +
+      h.map(r => {
+        const d = new Date(r.t);
+        return `<tr><td>${d.toLocaleDateString("en-AU",{day:"numeric",month:"short"})} ${d.toLocaleTimeString("en-AU",{hour:"numeric",minute:"2-digit"})}</td>
+          <td>${levelById(r.level).name}</td>
+          <td><span class="badge ${r.perfect?"ok":"warn"}">${r.score}/${r.total}</span></td>
+          <td>${r.streakAfter}</td></tr>`;
+      }).join("") + `</tbody>`
+    : `<tbody><tr><td class="note">No tests yet.</td></tr></tbody>`;
+}
+function renderSettingsScreen(){
+  $("setSpeak").checked = !!P().prefs.speak;
+  $("setAuto").checked  = !!P().prefs.autoListen;
+  $("policyNote").innerHTML =
+    `<strong>Class policy:</strong> ${cfg().testLength} questions per test · ${cfg().testSeconds} seconds each ·
+     ${cfg().requiredStreak} perfect tests for mastery · ${Math.round(cfg().mixRatio*100)}% revision in practice ·
+     recognition language ${cfg().lang}.` +
+    (cfg().curfew.enabled
+      ? `<br>Morris Multi Maths closes at ${hourLabel(cfg().curfew.startHour)} and opens again at ${hourLabel(cfg().curfew.endHour)}, Sydney time.`
+      : "") +
+    (cfg().pinMaxAgeDays
+      ? `<br><strong>PIN:</strong> changes every ${cfg().pinMaxAgeDays} days` +
+        (() => { const d = me() && (me().pinDaysLeft !== undefined && me().pinDaysLeft !== null ? me().pinDaysLeft : pinDaysLeft(me()));
+                 return (d === null || d === undefined) ? "." : ` — ${d} day${d===1?"":"s"} to go.`; })()
+      : "");
+}
+function renderAll(){
+  if(session.role !== "student") return;
+  renderLevelCards(); renderReadiness(); renderLevelProgress();
+  renderProgressScreen(); renderSettingsScreen();
+  play.renderStage();
+}
+function enterStudent(){
+  const s = me();
+  $("authView").classList.add("hide");
+  $("teacherView").classList.add("hide");
+  $("studentView").classList.remove("hide");
+  $("stuWho").textContent = s.solo ? s.name : `${s.name} · Year ${s.yearLevel}`;
+  $("stuOut").textContent = s.solo ? "Menu" : "Sign out";
+  pickVoice();
+  const verdict = browserVoiceVerdict();
+  setVoiceChip(verdict.ok ? "ready" : "error", verdict.msg);
+  if(!verdict.ok) $("keypadWrap").classList.add("open");
+  showStudentScreen("play");
+  play.enter();
+  renderAll();
+}
+function showStudentScreen(name){
+  document.querySelectorAll("#studentView .screen").forEach(s => s.classList.toggle("active", s.id === "stu-"+name));
+  document.querySelectorAll("[data-stu]").forEach(b => b.classList.toggle("active", b.dataset.stu === name));
+  if(name !== "play"){ stopTimer(); stopListening(); if(play.mode === "test") play.abandon(); }
+  if(name === "progress") renderProgressScreen();
+  if(name === "settings") renderSettingsScreen();
+}
+
+/* ==================================================================
+   15. TEACHER RENDERING
+   ================================================================== */
+/* Live dashboard. The server pushes a nudge whenever a student in this
+   teacher's year levels saves progress; the page then pulls fresh state.
+   Pulling rather than pushing the data keeps scoping in one place. */
+let liveSource = null, liveTimer = null, liveDirty = false;
+function startLiveUpdates(){
+  stopLiveUpdates();
+  if(!remote() || session.role !== "teacher" || typeof EventSource === "undefined") return;
+  try {
+    liveSource = new EventSource(ServerAdapter.base + "/events?token=" + encodeURIComponent(ServerAdapter.token));
+    liveSource.onmessage = () => {
+      liveDirty = true;
+      clearTimeout(liveTimer);
+      liveTimer = setTimeout(async () => {                 // coalesce bursts
+        if(!liveDirty || !remote() || session.role !== "teacher") return;
+        liveDirty = false;
+        try {
+          await refreshFromServer();
+          if($("tch-class").classList.contains("active")) renderClass();
+          if($("tch-students").classList.contains("active")) renderStudentsAdmin();
+          setLiveChip(true);
+        } catch(e){ setLiveChip(false); }
+      }, 600);
+    };
+    liveSource.onerror = () => setLiveChip(false);
+    liveSource.onopen  = () => setLiveChip(true);
+  } catch(e){ setLiveChip(false); }
+}
+function stopLiveUpdates(){
+  clearTimeout(liveTimer);
+  liveDirty = false;
+  if(liveSource){ try { liveSource.close(); } catch(e){} liveSource = null; }
+}
+function setLiveChip(on){
+  const c = $("liveChip");
+  if(!c) return;
+  c.classList.remove("hide");
+  c.innerHTML = `<span class="dot ${on?"listening":"error"}"></span>${on ? "Live — updating as students work" : "Live updates disconnected"}`;
+}
+function enterTeacher(){
+  const t = meTeacher();
+  $("authView").classList.add("hide");
+  $("studentView").classList.add("hide");
+  $("teacherView").classList.remove("hide");
+  $("tchWho").textContent = `${t.name}${t.admin ? " · Administrator" : ""} · ${t.admin ? "all year levels" : "Year " + t.yearLevels.join(", Year ")}`;
+  document.querySelector('[data-tch="teachers"]').classList.toggle("hide", !t.admin);
+  if(remote()) startLiveUpdates(); else $("liveChip").classList.add("hide");
+  showTeacherScreen("class");
+}
+function showTeacherScreen(name){
+  document.querySelectorAll("#teacherView .screen").forEach(s => s.classList.toggle("active", s.id === "tch-"+name));
+  document.querySelectorAll("[data-tch]").forEach(b => b.classList.toggle("active", b.dataset.tch === name));
+  if(name === "class")    renderClass();
+  if(name === "students") renderStudentsAdmin();
+  if(name === "teachers") renderTeachersAdmin();
+  if(name === "policy"){ renderPolicy(); renderStoreNote(); renderWhereNote(); }
+}
+function teacherYears(){
+  const t = meTeacher();
+  return t.admin ? cfg().yearLevels.slice() : t.yearLevels.slice();
+}
+function studentSummary(s){
+  const p = s.progress;
+  const cur = levelById(p.currentLevel);
+  const mastered = LEVELS.filter(l => p.levels[l.id].mastered).length;
+  const n = p.practiceLog.length;
+  const acc = n ? Math.round(p.practiceLog.reduce((a,r)=>a+r.ok,0)/n*100) : 0;
+  const r = readiness(p.currentLevel, p);
+  return { cur, mastered, n, acc, ready:r.ready, met:r.met, total:r.total,
+           streak:p.levels[p.currentLevel].streak, licence:licenceDays(p), licenceOk:licenceOk(p),
+           last:p.lastActive };
+}
+function renderClass(){
+  const years = teacherYears();
+  const sel = $("tchYearFilter");
+  const prev = sel.value;
+  sel.innerHTML = `<option value="all">All my year levels</option>` + years.map(y => `<option value="${y}">Year ${y}</option>`).join("");
+  if(prev && [...sel.options].some(o=>o.value===prev)) sel.value = prev;
+  sel.onchange = renderClass;
+
+  const filter = sel.value;
+  let list = visibleStudents(meTeacher());
+  if(filter !== "all") list = list.filter(s => s.yearLevel === parseInt(filter,10));
+
+  const total = list.length;
+  const masteredAll = list.filter(s => LEVELS.every(l => s.progress.levels[l.id].mastered)).length;
+  const ready = list.filter(s => readiness(s.progress.currentLevel, s.progress).ready).length;
+  const flagged = list.filter(s => !licenceOk(s.progress)).length;
+  $("tchSummary").innerHTML = `
+    <div class="stat"><strong>${total}</strong><span>students in view</span></div>
+    <div class="stat"><strong>${ready}</strong><span>ready for a test</span></div>
+    <div class="stat"><strong>${masteredAll}</strong><span>all five levels mastered</span></div>
+    <div class="stat"><strong>${flagged}</strong><span>licence review due</span></div>`;
+
+  $("classTable").innerHTML = total ? `
+    <thead><tr><th>Student</th><th>Year</th><th>Level</th><th>Streak</th><th>Medals</th><th>Accuracy</th><th>Test ready</th><th>Next test</th><th>PIN</th><th>Licence</th><th>Last active</th><th></th></tr></thead>
+    <tbody>${list.map(s => {
+      const m = studentSummary(s);
+      const lk = testLock(s.progress);
+      return `<tr>
+        <td><strong>${esc(s.name)}</strong></td>
+        <td>${s.yearLevel}</td>
+        <td><span class="pip ${m.cur.id}"></span> ${m.cur.name}</td>
+        <td>${m.streak}/${cfg().requiredStreak}</td>
+        <td>${m.mastered}/5</td>
+        <td>${m.n ? m.acc + "%" : "—"}</td>
+        <td>${m.ready ? '<span class="badge ok">READY</span>' : `<span class="badge mute">${m.met}/${m.total}</span>`}</td>
+        <td>${lk.locked ? `<span class="badge warn">in ${formatWait(lk.msLeft)}</span>` : '<span class="badge ok">OPEN</span>'}</td>
+        <td>${(() => {
+          const d = s.pinDaysLeft !== undefined && s.pinDaysLeft !== null ? s.pinDaysLeft : pinDaysLeft(s);
+          if(d === null || d === undefined) return '<span class="badge mute">—</span>';
+          return d <= 0 ? '<span class="badge warn">DUE</span>' : `<span class="badge mute">${d}d</span>`;
+        })()}</td>
+        <td>${m.licenceOk ? '<span class="badge ok">OK</span>' : `<span class="badge warn">${m.licence}/${cfg().licenceTargetDays}</span>`}</td>
+        <td class="note">${m.last ? new Date(m.last).toLocaleDateString("en-AU",{day:"numeric",month:"short"}) : "never"}</td>
+        <td><button class="btn small" data-detail="${s.id}">View</button></td>
+      </tr>`;
+    }).join("")}</tbody>` : `<tbody><tr><td class="note">No student accounts in these year levels yet.</td></tr></tbody>`;
+
+  $("classTable").querySelectorAll("[data-detail]").forEach(b => b.onclick = () => showStudentDetail(b.dataset.detail));
+}
+function showStudentDetail(id){
+  const s = Store.db.students.find(x => x.id === id);
+  if(!s || !teacherCanSee(meTeacher(), s)) return;
+  const p = s.progress, m = studentSummary(s);
+  const r = readiness(p.currentLevel, p);
+  const weakest = Object.keys(p.facts)
+    .filter(k => p.facts[k].seen >= 2 && scoreOf(p,k) < 0.75)
+    .sort((a,b) => scoreOf(p,a) - scoreOf(p,b)).slice(0,10);
+  const hist = p.history.slice().reverse().slice(0,6);
+  modal(`
+    <h2>${esc(s.name)}</h2>
+    <div class="note" style="margin-bottom:14px">Year ${s.yearLevel} · joined ${new Date(s.createdAt).toLocaleDateString("en-AU")}</div>
+    <div class="stats" style="margin-top:0">
+      <div class="stat"><strong>${m.cur.name}</strong><span>current level</span></div>
+      <div class="stat"><strong>${m.streak}/${cfg().requiredStreak}</strong><span>perfect run</span></div>
+      <div class="stat"><strong>${m.n ? m.acc+"%" : "—"}</strong><span>accuracy</span></div>
+      <div class="stat"><strong>${m.licence}/${cfg().licenceTargetDays}</strong><span>practice days</span></div>
+    </div>
+    <h3 style="font-size:.95rem;margin:16px 0 6px">Test readiness — ${r.met}/${r.total}</h3>
+    <div class="note">${r.checks.map(c => `${c.met?"✓":"○"} ${c.label} <span style="opacity:.7">(${c.val})</span>`).join("<br>")}</div>
+    <h3 style="font-size:.95rem;margin:16px 0 6px">Weakest facts</h3>
+    <div class="note">${weakest.length ? weakest.map(k => { const [a,b]=k.split("x").map(Number), f=p.facts[k];
+      return `${a} × ${b} = ${a*b} <span style="opacity:.7">(${f.correct}/${f.seen})</span>`; }).join("<br>") : "None flagged."}</div>
+    <h3 style="font-size:.95rem;margin:16px 0 6px">Recent tests</h3>
+    <div class="note">${hist.length ? hist.map(h2 => `${new Date(h2.t).toLocaleDateString("en-AU",{day:"numeric",month:"short"})} — ${levelById(h2.level).name} ${h2.score}/${h2.total}${h2.perfect?" ✓":""}`).join("<br>") : "No tests yet."}</div>
+  `, [
+    { label:"Reset PIN", fn:() => resetStudentPin(s) },
+    { label:"Close", cls:"primary" }
+  ]);
+}
+function resetStudentPin(s){
+  const pin = window.prompt(`New PIN for ${s.name} (4–8 digits):`, "1234");
+  if(pin === null) return;
+  setPin(s, pin).then(() => modal(`<h2>PIN updated</h2><p class="note">${esc(s.name)} can now sign in with the new PIN.</p>`))
+    .catch(e => modal(`<h2>Couldn't update</h2><p class="note">${esc(e.message)}</p>`));
+}
+function renderStudentsAdmin(){
+  const years = teacherYears();
+  $("nsYear").innerHTML = years.map(y => {
+    const c = yearCapacity(y);
+    return `<option value="${y}" ${c.used>=c.max?"disabled":""}>Year ${y} — ${c.used}/${c.max}${c.used>=c.max?" (full)":""}</option>`;
+  }).join("");
+  const cap = schoolCapacity();
+  $("capNote").innerHTML = `School capacity: <strong>${cap.used}/${cap.max}</strong> student accounts · ` +
+    cfg().yearLevels.map(y => { const c = yearCapacity(y); return `Year ${y} ${c.used}/${c.max}`; }).join(" · ");
+
+  const list = visibleStudents(meTeacher());
+  $("studentTable").innerHTML = list.length ? `
+    <thead><tr><th>Name</th><th>Year</th><th>Level</th><th>Created</th><th></th></tr></thead>
+    <tbody>${list.map(s => `<tr>
+      <td>${esc(s.name)}</td><td>${s.yearLevel}</td>
+      <td><span class="pip ${s.progress.currentLevel}"></span> ${levelById(s.progress.currentLevel).name}</td>
+      <td class="note">${new Date(s.createdAt).toLocaleDateString("en-AU")}</td>
+      <td class="row"><button class="btn small" data-pin="${s.id}">Reset PIN</button>
+        <button class="btn small danger" data-del="${s.id}">Delete</button></td>
+    </tr>`).join("")}</tbody>` : `<tbody><tr><td class="note">No students yet.</td></tr></tbody>`;
+  $("studentTable").querySelectorAll("[data-pin]").forEach(b => b.onclick = () => {
+    const s = Store.db.students.find(x => x.id === b.dataset.pin); if(s) resetStudentPin(s);
+  });
+  $("studentTable").querySelectorAll("[data-del]").forEach(b => b.onclick = () => {
+    const s = Store.db.students.find(x => x.id === b.dataset.del);
+    if(!s) return;
+    modal(`<h2>Delete ${esc(s.name)}?</h2><p class="note">Their account and all progress will be removed. This can't be undone.</p>`,
+      [ { label:"Delete", cls:"danger", fn:async () => {
+            if(remote()){ try { await apiDelete("/students/" + encodeURIComponent(s.id)); await refreshFromServer(); }
+                          catch(e){ modal(`<h2>Couldn't delete</h2><p class="note">${esc(e.message)}</p>`); return; } }
+            else { Store.db.students = Store.db.students.filter(x => x.id !== s.id); Store.persist(); }
+            renderStudentsAdmin(); renderClass();
+          } }, { label:"Cancel", cls:"primary" } ]);
+  });
+}
+function renderTeachersAdmin(){
+  const t = meTeacher();
+  if(!t.admin){
+    $("teacherAdminCard").classList.add("hide");
+    $("teacherTable").innerHTML = `<tbody><tr><td class="note">Only administrators can manage teacher accounts.</td></tr></tbody>`;
+    return;
+  }
+  $("teacherAdminCard").classList.remove("hide");
+  $("tchCapNote").innerHTML = `Teacher accounts in use: <strong>${Store.db.teachers.length}/${MAX_TEACHERS}</strong>.`;
+  $("ntYears").innerHTML = cfg().yearLevels.map(y =>
+    `<label><input type="checkbox" value="${y}"> Year ${y}</label>`).join("");
+  $("ntGo").disabled = Store.db.teachers.length >= MAX_TEACHERS;
+
+  $("teacherTable").innerHTML = `
+    <thead><tr><th>Name</th><th>Year levels</th><th>Role</th><th></th></tr></thead>
+    <tbody>${Store.db.teachers.map(x => `<tr>
+      <td>${esc(x.name)}</td>
+      <td>${x.admin ? "All" : (x.yearLevels.length ? x.yearLevels.map(y=>"Year "+y).join(", ") : "—")}</td>
+      <td>${x.admin ? '<span class="badge">ADMIN</span>' : '<span class="badge mute">TEACHER</span>'}</td>
+      <td class="row">
+        <button class="btn small" data-tpin="${x.id}">Reset PIN</button>
+        ${x.id === t.id ? "" : `<button class="btn small danger" data-tdel="${x.id}">Delete</button>`}
+      </td></tr>`).join("")}</tbody>`;
+
+  $("teacherTable").querySelectorAll("[data-tpin]").forEach(b => b.onclick = () => {
+    const x = Store.db.teachers.find(y => y.id === b.dataset.tpin);
+    const pin = window.prompt(`New PIN for ${x.name} (4–8 digits):`, "1234");
+    if(pin === null) return;
+    setPin(x, pin).then(() => modal(`<h2>PIN updated</h2><p class="note">${esc(x.name)} can sign in with the new PIN.</p>`))
+      .catch(e => modal(`<h2>Couldn't update</h2><p class="note">${esc(e.message)}</p>`));
+  });
+  $("teacherTable").querySelectorAll("[data-tdel]").forEach(b => b.onclick = () => {
+    const x = Store.db.teachers.find(y => y.id === b.dataset.tdel);
+    if(!x) return;
+    if(x.admin && Store.db.teachers.filter(y => y.admin).length <= 1){
+      modal(`<h2>Can't delete</h2><p class="note">This is the only administrator account.</p>`); return;
+    }
+    modal(`<h2>Delete ${esc(x.name)}?</h2><p class="note">Student accounts are not affected.</p>`,
+      [ { label:"Delete", cls:"danger", fn:async () => {
+            if(remote()){ try { await apiDelete("/teachers/" + encodeURIComponent(x.id)); await refreshFromServer(); }
+                          catch(e){ modal(`<h2>Couldn't delete</h2><p class="note">${esc(e.message)}</p>`); return; } }
+            else { Store.db.teachers = Store.db.teachers.filter(y => y.id !== x.id); Store.persist(); }
+            renderTeachersAdmin(); } },
+        { label:"Cancel", cls:"primary" } ]);
+  });
+}
+function renderWhereNote(){
+  const n = $("whereNote");
+  if(!n) return;
+  n.innerHTML = remote()
+    ? `<p>This page is talking to the class server at <code>${esc(location.host)}</code>. Every device signs in
+       against the same accounts, progress saves there as students work, and this dashboard updates live.</p>
+       <p>Back up the server's <code>data.json</code> file, or use Export everything above for a copy you can keep.</p>`
+    : `<p>This copy is running without a server, so accounts and progress live in <b>this browser only</b> — another
+       device sees nothing. That's fine for one shared classroom laptop.</p>
+       <p>To share accounts across devices, run <code>node server.js</code> from the project folder and open the address
+       it prints. The page detects the server by itself; no code change is needed.</p>`;
+}
+function renderPolicy(){
+  const c = cfg();
+  $("cfLen").value = c.testLength;
+  $("cfStreak").value = c.requiredStreak;
+  $("cfSeconds").value = c.testSeconds;
+  $("cfMix").value = String(c.mixRatio);
+  $("cfTestRev").value = c.testIncludesRevision ? "yes" : "no";
+  $("cfLang").value = c.lang;
+  $("cfWindow").value = c.licenceWindowDays;
+  $("cfTarget").value = c.licenceTargetDays;
+  $("cfLock").value = c.testLockHours;
+  const cu = c.curfew;
+  const hourOptions = sel => {
+    sel.innerHTML = Array.from({length:24},(_,h)=>`<option value="${h}">${hourLabel(h)}</option>`).join("");
+  };
+  hourOptions($("cfCurfewStart")); hourOptions($("cfCurfewEnd"));
+  $("cfCurfewOn").checked       = !!cu.enabled;
+  $("cfCurfewStart").value      = String(cu.startHour);
+  $("cfCurfewEnd").value        = String(cu.endHour);
+  $("cfCurfewTeachers").checked = !!cu.teachersExempt;
+  $("cfCurfewGrace").checked    = !!cu.graceForTestInProgress;
+  $("cfGraceMins").value        = cu.graceMinutes === undefined ? 5 : cu.graceMinutes;
+  $("cfPinAge").value           = c.pinMaxAgeDays === undefined ? 90 : c.pinMaxAgeDays;
+  const due = Store.db.students.concat(Store.db.teachers)
+    .filter(a => (a.pinDaysLeft !== undefined && a.pinDaysLeft !== null) ? a.pinDaysLeft <= 0 : pinExpired(a)).length;
+  $("cfPinNote").innerHTML = c.pinMaxAgeDays
+    ? `Everyone is asked for a new PIN on their first sign-in after ${c.pinMaxAgeDays} days. ` +
+      (due ? `<strong>${due} account${due===1?" is":"s are"} due now.</strong>` : "Nobody is due right now.")
+    : "PIN rotation is off — PINs last until someone changes them.";
+}
+
+/* ==================================================================
+   16. EXPORT / IMPORT
+   ================================================================== */
+/* Saving a file works two ways. Opened directly (local file or your own
+   server) a normal download link is fine. Inside the claude.ai artifact
+   viewer those links are inert, so the page asks the viewer to save through
+   the downloads capability instead. If neither route works, the data is shown
+   in a box to copy — a backup must never be impossible to take. */
+let hostedSave = null;
+if(window.claude && typeof window.claude.use === "function"){
+  try { window.claude.use("downloads").then(d => { hostedSave = d; }, () => {}); } catch(e){}
+}
+function copyFallback(filename, text){
+  modal(`<h2>Copy your backup</h2>
+    <p class="note">This view wouldn't save <b>${esc(filename)}</b> to your device. Select everything below and copy it into a file yourself.</p>
+    <textarea readonly style="width:100%;height:220px;font:12px/1.5 ui-monospace,Menlo,Consolas,monospace;
+      padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--card-2);color:var(--ink)">${esc(text)}</textarea>`,
+    [{ label:"Done", cls:"primary" }]);
+}
+async function download(filename, text, type){
+  if(hostedSave){
+    try { await hostedSave.save({ filename, data:text }); return true; }
+    catch(err){
+      const code = err && err.code;
+      if(code === "declined") return false;                    // viewer said no
+      if(code === "extension_not_enabled" || code === "rejected_extension"){
+        try { await hostedSave.save({ filename: filename.replace(/\.[^.]+$/,"") + ".txt", data:text }); return true; }
+        catch(e2){ if(e2 && e2.code === "declined") return false; }
+      }
+      copyFallback(filename, text);
+      return false;
+    }
+  }
+  try {
+    const blob = new Blob([text], { type: type || "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = filename;
+    a.style.display = "none"; document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+    return true;
+  } catch(e){ copyFallback(filename, text); return false; }
+}
+function classCsv(){
+  const list = visibleStudents(meTeacher());
+  const head = ["First name","Year","Current level","Perfect streak","Levels mastered","Questions answered","Accuracy %","Test ready","Next test unlocks","Practice days","Licence OK","Last active"];
+  const rows = list.map(s => {
+    const m = studentSummary(s), lk = testLock(s.progress);
+    return [s.name, s.yearLevel, m.cur.name, m.streak, m.mastered, m.n, m.n?m.acc:"", m.ready?"yes":"no",
+            lk.locked ? new Date(lk.until).toISOString() : "open",
+            m.licence, m.licenceOk?"yes":"no", m.last ? new Date(m.last).toISOString().slice(0,10) : ""];
+  });
+  return [head, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(",")).join("\r\n");
+}
+
+/* ==================================================================
+   17. WIRING
+   ================================================================== */
+function wire(){
+  /* auth */
+  $("suGo").onclick = async () => {
+    const years = [$("suY1"),$("suY2"),$("suY3")].map(i => parseInt(i.value,10));
+    if(years.some(isNaN) || new Set(years).size !== 3){ $("suErr").textContent = "Enter three different year levels."; return; }
+    if($("suPin").value !== $("suPin2").value){ $("suErr").textContent = "The two PINs don't match."; return; }
+    years.sort((a,b)=>a-b);
+    try {
+      if(remote()){
+        const res = await apiPost("/setup", { name:$("suName").value, pin:$("suPin").value, yearLevels:years });
+        ServerAdapter.token = res.token;
+        await refreshFromServer();
+        session = { role:"teacher", id:res.id };
+        enterTeacher();
+        return;
+      }
+      Store.db.config.yearLevels = years;
+      const t = await createTeacher({ name:$("suName").value, pin:$("suPin").value, yearLevels:years, admin:true });
+      session = { role:"teacher", id:t.id };
+      await Store.flush();
+      enterTeacher();
+    } catch(e){ $("suErr").textContent = e.message; }
+  };
+  $("tabStudent").onclick = () => {
+    $("tabStudent").classList.add("active"); $("tabTeacher").classList.remove("active");
+    $("studentSignin").classList.remove("hide"); $("teacherSignin").classList.add("hide"); $("siErr").textContent = "";
+  };
+  $("tabTeacher").onclick = () => {
+    $("tabTeacher").classList.add("active"); $("tabStudent").classList.remove("active");
+    $("teacherSignin").classList.remove("hide"); $("studentSignin").classList.add("hide"); $("siErr").textContent = "";
+  };
+  $("tiGo").onclick = trySigninTeacher;
+  $("tiPin").onkeydown = e => { if(e.key === "Enter") trySigninTeacher(); };
+  $("stuOut").onclick = signOut;
+  $("tchOut").onclick = signOut;
+  $("chooseSolo").onclick = async () => {
+    const name = (window.prompt("What's your first name?", "") || "").trim();
+    try { enterSolo(await createSolo(name)); }
+    catch(e){ modal(`<h2>Couldn't start</h2><p class="note">${esc(e.message)}</p>`); }
+  };
+  $("chooseSchool").onclick = () => { schoolSetupWanted = true; showAuth(); };
+  $("resumeGo").onclick     = () => { const s = soloStudent(); if(s) enterSolo(s); };
+  $("resumeSchool").onclick = () => { schoolSetupWanted = true; showAuth(); };
+  $("pinSave").onclick = submitPinChange;
+  $("pinNew2").onkeydown = e => { if(e.key === "Enter") submitPinChange(); };
+  $("pinCancel").onclick = signOut;
+  $("curfewTeacher").onclick = () => {
+    curfewShowing = false;
+    curfewTeacherEscape = true;
+    $("curfewView").classList.add("hide");
+    showAuth();
+    $("tabTeacher").click();
+  };
+
+  /* student nav */
+  document.querySelectorAll("[data-stu]").forEach(b => b.onclick = () => showStudentScreen(b.dataset.stu));
+  $("modePractice").onclick = () => play.setMode("practice");
+  $("modeSingle").onclick   = () => play.setMode("single");
+  $("orderShuffle").onclick = () => play.setOrder("shuffle");
+  $("orderInOrder").onclick = () => play.setOrder("order");
+  $("modeTest").onclick = () => {
+    if(play.mode === "test") return;
+    const lock = testLock();
+    if(lock.locked){ showLockedModal(lock); return; }
+    const r = readiness(P().currentLevel);
+    const hours = cfg().testLockHours;
+    const warning = hours
+      ? `<p class="note" style="text-align:center"><b>Starting uses today's attempt.</b> Whether you finish it or not, the next test unlocks ${hours} hours from now.</p>`
+      : "";
+    modal(`<div class="big">${r.ready ? "🎯" : "📋"}</div>
+      <h2 style="text-align:center">${r.ready ? "Ready to go" : "Start the test anyway?"}</h2>
+      <p class="note" style="text-align:center">${cfg().testLength} questions, ${cfg().testSeconds} seconds each, every one must be right.${
+        r.ready ? "" : ` Only ${r.met} of ${r.total} readiness signs are met.`}</p>${warning}`,
+      [ { label:"Start the test", cls:"primary", fn:() => play.setMode("test") },
+        { label:"Keep practising" } ]);
+  };
+  $("micBtn").onclick  = () => play.listen();
+  $("btnRetry").onclick = () => play.listen();
+  $("btnRepeat").onclick = () => { if(play.q) speak(spokenQuestion(play.q)); };
+  $("btnKeypad").onclick = () => $("keypadWrap").classList.toggle("open");
+  $("btnSkip").onclick = () => {
+    if(play.mode === "practice") play.newQuestion();
+    else if(play.mode === "single") play.nextSingle();
+  };
+  $("btnQuit").onclick = () => modal(`<h2>Abandon this test?</h2><p class="note">It won't count towards the run of perfect tests.</p>`,
+    [ { label:"Abandon", cls:"danger", fn:() => play.abandon() }, { label:"Keep going", cls:"primary" } ]);
+  $("setSpeak").onchange = e => { P().prefs.speak = e.target.checked; Store.patchStudent(me()); };
+  $("setAuto").onchange  = e => { P().prefs.autoListen = e.target.checked; Store.patchStudent(me()); };
+  $("setPinGo").onclick = async () => {
+    try { await setPin(me(), $("setPin").value); $("setPin").value = ""; $("setErr").style.color = "var(--success)"; $("setErr").textContent = "PIN updated."; }
+    catch(e){ $("setErr").style.color = ""; $("setErr").textContent = e.message; }
+  };
+
+  /* teacher nav */
+  document.querySelectorAll("[data-tch]").forEach(b => b.onclick = () => showTeacherScreen(b.dataset.tch));
+  $("nsGo").onclick = async () => {
+    $("nsErr").textContent = "";
+    try {
+      await createStudent({ name:$("nsName").value, pin:$("nsPin").value, yearLevel: parseInt($("nsYear").value,10) });
+      $("nsName").value = "";
+      if(remote()) await refreshFromServer();
+      renderStudentsAdmin(); renderClass();
+    } catch(e){ $("nsErr").textContent = e.message; }
+  };
+  $("nsBulk").onclick = () => {
+    const year = parseInt($("nsYear").value,10);
+    const names = window.prompt(`Paste student names for Year ${year}, one per line:`, "");
+    if(!names) return;
+    (async () => {
+      const added = [], failed = [];
+      for(const raw of names.split("\n").map(s=>s.trim()).filter(Boolean)){
+        try { await createStudent({ name:raw, pin:$("nsPin").value || "1234", yearLevel:year }); added.push(raw); }
+        catch(e){ failed.push(`${raw} — ${e.message}`); }
+      }
+      if(remote()) await refreshFromServer();
+      renderStudentsAdmin(); renderClass();
+      modal(`<h2>Added ${added.length} student${added.length===1?"":"s"}</h2>
+        ${failed.length ? `<div class="note"><strong>Not added:</strong><br>${failed.map(esc).join("<br>")}</div>` : `<p class="note">All names were added to Year ${year}.</p>`}`);
+    })();
+  };
+  $("ntGo").onclick = async () => {
+    $("ntErr").textContent = "";
+    const years = [...$("ntYears").querySelectorAll("input:checked")].map(i => parseInt(i.value,10));
+    try {
+      await createTeacher({ name:$("ntName").value, pin:$("ntPin").value,
+        yearLevels:years, admin:$("ntAdmin").checked });
+      $("ntName").value = ""; $("ntAdmin").checked = false;
+      if(remote()) await refreshFromServer();
+      renderTeachersAdmin();
+    } catch(e){ $("ntErr").textContent = e.message; }
+  };
+  $("cfSave").onclick = () => {
+    const c = cfg();
+    c.testLength     = Math.max(5,  Math.min(60,  parseInt($("cfLen").value,10)     || 30));
+    c.requiredStreak = Math.max(1,  Math.min(10,  parseInt($("cfStreak").value,10)  || 5));
+    c.testSeconds    = Math.max(3,  Math.min(60,  parseInt($("cfSeconds").value,10) || 8));
+    c.mixRatio       = parseFloat($("cfMix").value);
+    c.testIncludesRevision = $("cfTestRev").value === "yes";
+    c.lang           = $("cfLang").value;
+    c.licenceWindowDays = Math.max(30, Math.min(730, parseInt($("cfWindow").value,10) || 183));
+    c.licenceTargetDays = Math.max(1,  Math.min(365, parseInt($("cfTarget").value,10) || 60));
+    c.testLockHours     = Math.max(0,  Math.min(168, parseInt($("cfLock").value,10)   || 0));
+    c.pinMaxAgeDays = Math.max(0, Math.min(365, parseInt($("cfPinAge").value,10) || 0));
+    c.curfew = {
+      enabled: $("cfCurfewOn").checked,
+      startHour: Math.max(0, Math.min(23, parseInt($("cfCurfewStart").value,10) || 0)),
+      endHour:   Math.max(0, Math.min(23, parseInt($("cfCurfewEnd").value,10)   || 0)),
+      teachersExempt: $("cfCurfewTeachers").checked,
+      graceForTestInProgress: $("cfCurfewGrace").checked,
+      graceMinutes: Math.max(0, Math.min(30, parseInt($("cfGraceMins").value,10) || 0))
+    };
+    if(remote()){
+      ServerAdapter.request("/config", { method:"PUT", body: JSON.stringify(c) })
+        .catch(e => modal(`<h2>Couldn't save the policy</h2><p class="note">${esc(e.message)}</p>`));
+    } else Store.persist();
+    renderPolicy(); pickVoice();
+    $("cfSaved").classList.remove("hide");
+    setTimeout(() => $("cfSaved").classList.add("hide"), 1800);
+  };
+  $("btnExport").onclick = () => download(`morris-multi-maths-backup-${todayKey()}.json`, JSON.stringify(Store.db,null,2));
+  $("btnCsv").onclick    = () => download(`class-results-${todayKey()}.csv`, classCsv(), "text/csv");
+  $("btnImport").onclick = () => $("fileImport").click();
+  $("fileImport").onchange = e => {
+    const f = e.target.files[0]; if(!f) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        Store.db = migrate(JSON.parse(reader.result));
+        Store.persist();
+        modal(`<h2>Backup restored</h2><p class="note">${Store.db.students.length} students and ${Store.db.teachers.length} teachers loaded. Sign in again.</p>`,
+          [ { label:"Sign in", cls:"primary", fn:signOut } ]);
+      } catch(err){ modal(`<h2>Couldn't read that file</h2><p class="note">It didn't look like a Morris Multi Maths backup.</p>`); }
+    };
+    reader.readAsText(f); e.target.value = "";
+  };
+  $("btnWipe").onclick = () => modal(`<div class="big">⚠️</div><h2 style="text-align:center">Reset all data?</h2>
+    <p class="note" style="text-align:center">Every teacher account, student account and all progress will be deleted.</p>`,
+    [ { label:"Delete everything", cls:"danger", fn:async () => { Store.db = migrate(null); await Store.flush(); signOut(); } },
+      { label:"Cancel", cls:"primary" } ]);
+
+  const verdict = browserVoiceVerdict();
+  setVoiceChip(verdict.ok ? "ready" : "error", verdict.msg);
+  if(!verdict.ok){
+    if(SR && !isSecure && !isEdge && !isOpera) $("secureBanner").classList.remove("hide");
+    else { const b = $("browserBanner"); b.innerHTML = `<span>🎙️</span><div><b>Voice practice needs a different browser.</b> ${esc(verdict.msg)}</div>`; b.classList.remove("hide"); }
+  }
+}
+document.addEventListener("visibilitychange", () => { if(document.hidden){ stopListening(); } });
+
+/* ==================================================================
+   18. BOOT
+   ================================================================== */
+(async function boot(){
+  // If this page is being served by a Morris Multi Maths server, use it.
+  // Opened as a file, or served as plain static HTML, it stays fully local.
+  let serverMode = false;
+  if(location.protocol === "http:" || location.protocol === "https:"){
+    try {
+      const r = await fetch("/api/public", { cache:"no-store" });
+      if(r.ok){
+        const pub = await r.json();
+        if(pub && (pub.app === "morris-multi-maths" || pub.app === "times-table-quest")){
+          Store.use(ServerAdapter);
+          if(pub.curfew) serverCurfew = pub.curfew;   // the server's clock from the very first paint
+          Store.db = migrate({ config: pub.config, teachers: pub.teachers });
+          serverMode = true;
+        }
+      }
+    } catch(e){ /* no server here — stay local */ }
+  }
+  if(!serverMode) await Store.load();
+  pickVoice();
+  buildKeypads();
+  wire();
+  const returning = soloStudent();
+  if(returning && !curfewState().closed){ enterSolo(returning); }
+  else showAuth();
+  renderStoreNote();
+  startCurfewWatch();
+  const foot = $("authFoot");
+  if(foot && serverMode) foot.textContent =
+    "Signed in against your class server. The only detail stored about anyone is a first name; PINs are hashed.";
+})();
+
+/* Exposed for testing from Node or the console. */
+window.MMM = {
+  LEVELS, MAX_TEACHERS, MAX_STUDENTS, MAX_PER_YEAR,
+  parseSpokenNumber, judgeSpeech, digitJoinMatches,
+  nextQuestion, buildTestSet, readiness, recordTest, recordAnswer,
+  factsForLevel, reviseFacts, licenceDays, licenceText,
+  createTeacher, createStudent, verifyPin, setPin, hashPin,
+  teacherCanSee, visibleStudents, yearCapacity, schoolCapacity, soloStudent, createSolo,
+  Store, LocalAdapter, ServerAdapter, migrate, blankProgress,
+  testLock, formatWait, browserVoiceVerdict, curfewState, curfewNow, zonedMinutes, sydneyMinutes,
+  sydneyOffsetHours, hourLabel, checkCurfew, curfewAppliesTo, pinExpired, pinDaysLeft, pinAgeDays, applyNewPin, pinReused, validName, studentNameTaken, teacherNameTaken, levelOfTable,
+  session: () => session, db: () => Store.db, play, timer
+};
+window.TTQ = window.MMM;                      // old name, kept so existing bookmarks keep working
+</script>
+
+
+</body>
+</html>
