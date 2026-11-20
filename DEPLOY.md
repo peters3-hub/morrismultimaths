@@ -119,6 +119,50 @@ Delete any existing records for `@` or `www` that point somewhere else, such as
 a registrar's parking page. Two records fighting is the usual reason this
 doesn't work.
 
+### 4b-Porkbun. If you bought the domain at Porkbun
+
+Porkbun has a one-click setup for exactly this.
+
+**Before you click it:** Quick DNS Config *reconfigures* your records. If this
+domain already handles **email** — an MX record, or Porkbun's email forwarding
+— write those records down first, because you may need to put them back. If the
+domain only has Porkbun's parking page on it, there is nothing to lose.
+
+1. Log in at **porkbun.com**. You land on **Domain Management** (if not, click
+   **ACCOUNT** at the top right → **Domain Management**).
+2. Find your domain and click the **DNS** button beneath it. (The long way:
+   **Details** on the right → **DNS Records** → the edit icon.)
+3. In the **Manage DNS Records** panel, scroll to **Quick DNS Config**.
+4. Click **Github**, then **OK** in the confirmation box. This puts GitHub's
+   apex records in for you — the four A records from the table above.
+5. An **Additional DNS Requirements** box appears, asking for the subdomain
+   record. Fill it in:
+   - **Type:** CNAME
+   - **Host:** `www`
+   - **Answer:** replace `USERNAME` with your GitHub username, giving
+     `peters3-hub.github.io`
+   - Click **Submit**.
+6. Check **Current Records** below. You should see four A records for the bare
+   domain and one CNAME for `www`.
+
+**Doing it by hand instead**, if you would rather see every record: click
+**Add Record** and use these fields —
+
+- **Type** — A or CNAME
+- **Host** — `www` for the subdomain, **leave it blank** for the bare domain
+  (Porkbun treats empty as the root; there is no `@` to type)
+- **Answer** — the IP address, or `peters3-hub.github.io` for the CNAME
+- **TTL** — leave the default
+
+Add the four A records with a blank Host, and one CNAME with Host `www`. Delete
+any pre-existing A, CNAME or ALIAS record for the same names first — Porkbun
+ships new domains with records pointing at its own parking page, and two records
+for one name is the usual reason this silently fails.
+
+> Porkbun also offers **ALIAS**, which is their answer for hosts that give you
+> a name rather than an IP address. You do not need it here: GitHub publishes
+> real IP addresses, so plain A records are the simpler choice.
+
 ### 4c. Wait
 
 DNS changes take anywhere from ten minutes to a few hours. Make a cup of tea.
@@ -146,6 +190,59 @@ If the microphone does nothing, check you are not in Edge or Firefox. Neither
 can do speech recognition; the app will say so and open the keypad.
 
 ---
+
+## Part 5b — Phones, tablets and the microphone
+
+The layout works on phones: the page opens on the question with the
+microphone in reach, down to a 320px screen. On a narrow screen the level
+cards become one row you swipe sideways, and the mode tabs shorten.
+
+The **microphone** is the part that depends on the browser, and it is worth
+getting right before you hand the address out.
+
+| Device | Use | Not this |
+|---|---|---|
+| Windows / Mac laptop | **Chrome** | Edge, Firefox, Opera |
+| Android phone or tablet | **Chrome** or Samsung Internet | Firefox |
+| iPhone / iPad | **Safari** | Chrome, Edge and Firefox for iOS |
+
+The iPhone row surprises people. Every browser on iOS is Safari underneath,
+but third-party iOS browsers don't expose speech recognition — so "just use
+Chrome", which is right everywhere else, is wrong on an iPad.
+
+### iPads: Siri has to be on
+
+Apple shipped speech recognition in Safari 14.1 / **iOS and iPadOS 14.5**, and
+WebKit's own announcement is explicit about what it runs on: *"Safari supports
+speech recognition powered by the same speech engine as Siri… users will need
+Siri enabled in System Preferences on macOS or Settings in iOS or iPadOS for
+the API to be available to be used."*
+
+**That is the thing to check on school iPads.** Managed devices very often have
+Siri switched off by policy, and when it is off the microphone simply isn't
+available — on an iPad that is otherwise perfectly capable. If your iPads are
+managed by IT, ask for **Settings → Siri & Search** to be left on, or for
+Siri to be allowed in the device profile.
+
+The app now says this itself: an iPad with no speech recognition is told to
+turn Siri on, and an iPad running Chrome is told to open the page in Safari.
+Neither is sent chasing a browser that cannot help.
+
+Still worth borrowing one iPad and trying it before you buy a set.
+
+Three more things that decide whether the microphone works:
+
+1. **HTTPS.** No padlock, no microphone. This is why Part 4 matters.
+2. **Permission.** Each device asks once. The student taps **Allow**. If they
+   tap Block by accident, it is reset from the icon at the left of the address
+   bar.
+3. **Internet.** Chrome does the recognition on Google's servers, not on the
+   device, so voice needs a connection even though the page is yours. The
+   keypad works offline.
+
+**Nothing here breaks the app.** On a browser that cannot listen, the site says
+so plainly and opens the keypad — and there is a watchdog for browsers that
+claim support and then return nothing, which is exactly what Edge does.
 
 ## Part 6 — What this version can and cannot do
 
@@ -196,13 +293,33 @@ deciding on purpose rather than by accident.
 
 ---
 
-## Making changes later
+## Uploading an update
 
-Edit a file on GitHub directly: open it, click the pencil icon, change it,
-click **Commit changes**. GitHub Pages rebuilds within a minute or two.
+When you get a new copy of the files, updating GitHub is the **same action as
+the first upload**. There is no separate "update" button.
 
-For bigger changes, upload a new copy the same way as Part 2. GitHub keeps
-every version, so nothing is lost.
+1. Unzip the new `morris-multi-maths.zip`.
+2. Repository → **Add file** → **Upload files**.
+3. Drag **all** the files in, even the ones that haven't changed. GitHub works
+   out which are different.
+4. Type what changed in the commit box — `Phone layout fixes`, say.
+5. **Commit changes**.
+
+Three things people worry about, and shouldn't:
+
+- **It won't delete anything.** Uploading replaces files with the same name and
+  leaves every other file alone. Your `CNAME` file (the one GitHub made when you
+  set the custom domain) and `.gitignore` both survive.
+- **You can't lose the old version.** Every commit is kept. Click **History** on
+  any file to see what changed and go back.
+- **The live site updates itself.** GitHub Pages rebuilds a minute or two after
+  the commit. If you still see the old version, hold Shift and reload.
+
+Only `index.html` changes what visitors see while you are on GitHub Pages.
+`server.js` matters later, when you move to a host that runs it.
+
+For a one-line fix you can skip all this: open the file on GitHub, click the
+pencil icon, edit it, **Commit changes**.
 
 ---
 

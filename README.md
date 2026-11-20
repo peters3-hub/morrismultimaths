@@ -150,7 +150,7 @@ not actually deliver.
 | **Chrome** (desktop) | ✅ Works | The reference implementation. Best choice. |
 | **Chrome** (Android) | ✅ Works | |
 | **Safari** (macOS 14.1+) | ✅ Works | |
-| **Safari** (iOS/iPadOS 14.5+) | ✅ Works | Good option for class iPads. |
+| **Safari** (iOS/iPadOS 14.5+) | ✅ Works | **Siri must be enabled** in Settings — Apple's recognition is Siri's engine, and managed school iPads often have it off. |
 | **Samsung Internet** | ✅ Works | |
 | **Edge** | ❌ **Do not use** | Exposes `webkitSpeechRecognition`, starts listening, and never returns a result. No error is thrown, so it just appears frozen. |
 | **Firefox** | ❌ No support | Never shipped; disabled by default since version 22. |

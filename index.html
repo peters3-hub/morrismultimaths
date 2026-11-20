@@ -303,14 +303,60 @@ table.data tbody tr:hover{background:var(--card-2)}
 footer.foot{text-align:center;color:var(--faint);margin-top:22px;font-size:.8rem}
 
 @media (max-width:820px){
-  .levels{grid-template-columns:1fr 1fr}
   .grid2{grid-template-columns:1fr}
   .stats{grid-template-columns:1fr 1fr}
   header.top{align-items:flex-start}
+  /* A phone should open on the question, not on a column of level cards.
+     Stacked, they pushed the equation and the microphone a screen and a half
+     down the page. As one swipeable row they cost about 90px. */
+  .levels{
+    display:flex;gap:8px;overflow-x:auto;margin-bottom:14px;padding-bottom:4px;
+    scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;
+  }
+  .level{flex:0 0 auto;width:138px;padding:10px;scroll-snap-align:start}
+  .level-name{font-size:.92rem}
+  .level-tables{font-size:.74rem;margin-top:2px}
+  .level-progress{margin-top:7px}
+  .level .badge{margin-top:6px;font-size:.6rem;padding:2px 6px}
+  .main-card{min-height:0;padding:18px 14px}
+  .mode-row{margin-bottom:16px}
+  /* The question is the task; the level strip is navigation. On a phone the
+     task goes first and the strip moves below it, still a swipe away. */
+  #stu-play{display:flex;flex-direction:column}
+  #stu-play .main-card{order:1}
+  #stu-play .levels{order:2;margin:14px 0 0}
+  #stu-play .grid2{order:3}
+  /* one row for the tabs and the way out, rather than two */
+  .who{gap:8px;width:100%}
+  .who nav.tabs{flex:1 1 0;min-width:0;padding:4px;justify-content:space-between}
+  .who nav.tabs button{padding:8px 9px;font-size:.84rem;white-space:nowrap}
+  .who > .btn.small{flex:0 0 auto;padding:8px 11px}
 }
 @media (max-width:460px){
-  .levels{grid-template-columns:1fr}
-  .equation{font-size:3.4rem}
+  .equation{font-size:3.2rem;margin:8px 0 6px}
+  header.top{margin-bottom:12px}
+  .main-card{padding:14px 12px}
+  .chip{font-size:.8rem;padding:6px 11px}
+  .app{padding:10px 0 36px}
+  .brand h1{font-size:1.45rem}
+  .brand p{font-size:.84rem}
+  /* On the smallest phones the voice-status pill costs more than it tells:
+     a microphone problem already turns the button red and says so underneath. */
+  #studentView .chip{display:none}
+  .readiness{font-size:.8rem;padding:9px 12px}
+  .prompt{margin-bottom:10px;font-size:.9rem;min-height:0}
+  .eyebrow{font-size:.68rem}
+  .mode-row{margin-bottom:12px;gap:8px}
+  .mic-shell{width:132px;height:132px}
+  .mic{width:92px;height:92px;font-size:2.2rem}
+  .ring{width:132px;height:132px}
+}
+@media (max-width:400px){
+  /* Last few pixels on the smallest phones, so the question is on screen
+     when the page opens. The level bars are repeated under Level progress. */
+  .levels{margin-bottom:10px}
+  .level{width:124px;padding:9px}
+  .level .level-progress{display:none}
 }
 
 button:focus-visible,.level:focus-visible,.keypad button:focus-visible,.chip-btn:focus-visible{
@@ -1495,9 +1541,23 @@ const UA = navigator.userAgent || "";
 const isEdge    = /\bEdg(?:e|A|iOS)?\//.test(UA);
 const isFirefox = /\bFirefox\//.test(UA);
 const isOpera   = /\bOPR\//.test(UA);
+/* iPadOS 13+ reports itself as a Mac, so a touch-capable "Mac" is an iPad. */
+const isIOS = /\b(iPad|iPhone|iPod)\b/.test(UA) ||
+              (/\bMacintosh\b/.test(UA) && typeof navigator.maxTouchPoints === "number" && navigator.maxTouchPoints > 1);
+/* Safari on iOS is WebKit with Apple's own UI; other iOS browsers are WebKit
+   with someone else's, and do not expose speech recognition. */
+const isIOSSafari = isIOS && !/\b(CriOS|FxiOS|EdgiOS|OPiOS|Chrome)\b/.test(UA);
+/* Apple's speech recognition is Siri's engine, so Siri has to be turned on.
+   Managed school iPads very often have it switched off by policy, which is
+   the most likely reason voice fails on an iPad that is otherwise fine. */
+const SIRI_HINT = "On an iPad or iPhone, open Settings \u2192 Siri & Search and turn Siri on — the microphone uses Siri's speech engine.";
 let silentRounds = 0;                        // listen attempts that returned nothing at all
 let voiceDeclaredBroken = false;
 function browserVoiceVerdict(){
+  if(!SR && isIOS && !isIOSSafari)
+    return { ok:false, msg:"On an iPad or iPhone, voice only works in Safari. Open this page in Safari, or use the keypad here." };
+  if(!SR && isIOSSafari)
+    return { ok:false, msg:"Safari isn't offering speech recognition. " + SIRI_HINT + " The keypad works either way." };
   if(!SR)      return { ok:false, msg:`This browser has no speech recognition. ${isFirefox ? "Firefox has never shipped it" : "It isn't available here"} — use Chrome or Safari for voice, or the keypad here.` };
   if(isEdge)   return { ok:false, msg:"Microsoft Edge has a speech recognition button that never returns an answer. Use Google Chrome or Safari for voice practice — the keypad works here." };
   if(isOpera)  return { ok:false, msg:"Opera doesn't support speech recognition. Use Chrome or Safari for voice, or the keypad here." };
@@ -2279,7 +2339,9 @@ const play = {
       "unsupported":"This browser has no speech recognition. Use the keypad.",
       "aborted":"", "busy":""
     };
-    const m = msgs[err] !== undefined ? msgs[err] : "Microphone problem — use the keypad.";
+    let m = msgs[err] !== undefined ? msgs[err] : "Microphone problem — use the keypad.";
+  // On Apple devices a blocked or missing service is usually Siri being off.
+  if(isIOS && (err === "not-allowed" || err === "service-not-allowed" || err === "audio-capture")) m = SIRI_HINT;
     if(m){ $("transcript").textContent = m; setVoiceChip("error", m); }
     if(["not-allowed","insecure","unsupported","audio-capture","service-not-allowed"].includes(err)){
       $("keypadWrap").classList.add("open");
@@ -2515,6 +2577,14 @@ function renderLevelCards(){
     play.newQuestion();
   });
 }
+const narrowScreen = () => window.innerWidth <= 460;
+function applyModeLabels(){
+  const m = $("modePractice");
+  if(!m) return;
+  m.textContent = narrowScreen() ? "Mixed" : "Mixed practice";
+  $("modeSingle").textContent = "One table";
+  renderReadiness();                 // owns the test tab's label, padlock and all
+}
 function renderReadiness(){
   const lvl = P().currentLevel;
   const r = readiness(lvl);
@@ -2531,7 +2601,7 @@ function renderReadiness(){
       : r.ready ? "✓ You look ready for a mastery test."
       : `Getting ready — ${r.met} of ${r.total} signs met.`;
   }
-  $("modeTest").textContent = lock.locked ? "Mastery test 🔒" : "Mastery test";
+  $("modeTest").textContent = (narrowScreen() ? "Test" : "Mastery test") + (lock.locked ? " 🔒" : "");
   $("readyChecks").innerHTML = `<div class="note" style="margin-top:4px">${
     r.checks.map(c => `<div style="display:flex;gap:8px;align-items:center;${c.met?"color:var(--ink)":""}">
       <span style="width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:.65rem;font-weight:900;
@@ -2622,7 +2692,7 @@ function renderSettingsScreen(){
 }
 function renderAll(){
   if(session.role !== "student") return;
-  renderLevelCards(); renderReadiness(); renderLevelProgress();
+  renderLevelCards(); applyModeLabels(); renderLevelProgress();
   renderProgressScreen(); renderSettingsScreen();
   play.renderStage();
 }
@@ -3209,6 +3279,7 @@ document.addEventListener("visibilitychange", () => { if(document.hidden){ stopL
   else showAuth();
   renderStoreNote();
   startCurfewWatch();
+  window.addEventListener("resize", () => { if(session.role === "student") applyModeLabels(); });
   const foot = $("authFoot");
   if(foot && serverMode) foot.textContent =
     "Signed in against your class server. The only detail stored about anyone is a first name; PINs are hashed.";
@@ -3222,7 +3293,7 @@ window.MMM = {
   factsForLevel, reviseFacts, licenceDays, licenceText,
   createTeacher, createStudent, verifyPin, setPin, hashPin,
   teacherCanSee, visibleStudents, yearCapacity, schoolCapacity, soloStudent, createSolo,
-  Store, LocalAdapter, ServerAdapter, migrate, blankProgress,
+  Store, LocalAdapter, ServerAdapter, migrate, blankProgress, isIOS, isIOSSafari,
   testLock, formatWait, browserVoiceVerdict, curfewState, curfewNow, zonedMinutes, sydneyMinutes,
   sydneyOffsetHours, hourLabel, checkCurfew, curfewAppliesTo, pinExpired, pinDaysLeft, pinAgeDays, applyNewPin, pinReused, validName, studentNameTaken, teacherNameTaken, levelOfTable,
   session: () => session, db: () => Store.db, play, timer
