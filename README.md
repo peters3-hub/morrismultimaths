@@ -150,7 +150,7 @@ not actually deliver.
 | **Chrome** (desktop) | ✅ Works | The reference implementation. Best choice. |
 | **Chrome** (Android) | ✅ Works | |
 | **Safari** (macOS 14.1+) | ✅ Works | |
-| **Safari** (iOS/iPadOS 14.5+) | ✅ Works | **Siri must be enabled** in Settings — Apple's recognition is Siri's engine, and managed school iPads often have it off. |
+| **Safari** (iOS/iPadOS 14.5+) | ✅ Works | **Siri must be enabled** in Settings — Apple's recognition is Siri's engine, and managed school iPads often have it off. Repeat answers need a pause between them; see below. |
 | **Samsung Internet** | ✅ Works | |
 | **Edge** | ❌ **Do not use** | Exposes `webkitSpeechRecognition`, starts listening, and never returns a result. No error is thrown, so it just appears frozen. |
 | **Firefox** | ❌ No support | Never shipped; disabled by default since version 22. |
@@ -161,6 +161,27 @@ problem and the keypad opens automatically — and there is a watchdog that catc
 any *other* browser that starts listening and silently returns nothing.
 
 **Recommendation: standardise the class on Chrome, or Safari on iPads.**
+
+### Answering question after question on an iPhone or iPad
+
+Apple releases the microphone lazily. Start a new recognition the instant the
+previous one ends — or the instant the spoken question ends — and iOS hands back
+a session that never opens the microphone and never reports a thing: no result,
+no error, no end event. The symptom is unmistakable once you have seen it: the
+first answer is heard, and every answer after it is ignored.
+
+So the app serialises access to the engine. Nothing starts listening until the
+audio session has had time to unwind (450ms on Apple devices, 80ms elsewhere),
+a session that fails to open the microphone is retried once with a longer gap,
+and if that fails too the student is asked to tap the microphone for each
+question — a tap is user activation, which iOS always honours. The status chip
+says so, the button pulses, and nobody is told their browser is broken, because
+it isn't.
+
+`voicerepeat.mjs` holds this behaviour in place: it runs the real app against
+three fake engines — one that behaves, one that needs 400ms between sessions,
+and one that will only start from inside a tap — and requires three answers in a
+row from the first two and an honest tap prompt from the third.
 
 Two more things worth knowing:
 

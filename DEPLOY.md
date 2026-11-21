@@ -230,6 +230,21 @@ Neither is sent chasing a browser that cannot help.
 
 Still worth borrowing one iPad and trying it before you buy a set.
 
+### iPhones and iPads: answer after answer
+
+Apple hands the microphone back slowly. If the next question starts listening
+the instant the last answer finished — or the instant the spoken question
+finished — iOS opens a session that never hears anything and never reports a
+problem. That looks exactly like one answer working and every answer after it
+being ignored.
+
+The app now waits for the audio to clear before listening again, and if the
+device still refuses to listen hands-free, it stops pretending: the microphone
+button pulses and the student taps it once per question. On an iPhone or iPad
+that is the normal way in, because a tap is something iOS always honours.
+
+Nothing to configure, and nothing changes on Chrome or Android.
+
 Three more things that decide whether the microphone works:
 
 1. **HTTPS.** No padlock, no microphone. This is why Part 4 matters.
@@ -335,6 +350,34 @@ error GitHub reports.
 
 **"Not secure" or no padlock.** Enforce HTTPS isn't on yet. Wait for it to
 become available, then tick it.
+
+**"This site can't provide a secure connection — uses an unsupported
+protocol" / `ERR_SSL_VERSION_OR_CIPHER_MISMATCH`.** Nothing with a certificate
+for your name is answering on HTTPS. It is not the app — the browser never got
+as far as loading a page. Work through these in order, and stop when one of
+them is the answer:
+
+1. **Try `https://peters3-hub.github.io/morrismultimaths/`.** If *that* works,
+   the files and Pages are fine and the problem is only the domain. If it 404s,
+   Pages isn't serving anything yet — go back to Part 2 and Part 3.
+2. **Check GitHub has been told the domain.** Settings → Pages → Custom domain
+   must contain your domain, saved, with a green tick. GitHub only requests a
+   certificate for the name you put in that box.
+3. **Give the certificate time.** GitHub requests it from Let's Encrypt after
+   the DNS checks out, which can take an hour. Until it arrives, HTTPS fails
+   with this exact error. If it is still failing the next day, clear the Custom
+   domain box, Save, re-enter it, Save — that makes GitHub ask again.
+4. **Check for a leftover Porkbun record.** Parking pages and URL forwarding
+   answer on port 443 with a certificate for someone else's name, which
+   produces this error precisely. Delete any default/parking A record, any
+   ALIAS, and any URL forwarding, and leave only: four A records on the bare
+   name pointing at GitHub, and `www` as a CNAME to `peters3-hub.github.io`.
+5. **Both names, not one.** If the apex is set up and `www` is not (or the
+   reverse), the one you typed has no certificate. Set up both, since children
+   will type `www` out of habit.
+
+While you are sorting it out, the GitHub address works and voice works on it,
+so you can keep testing.
 
 **Microphone does nothing.** Wrong browser (use Chrome or Safari), or the site
 is not on HTTPS, or permission was denied — in Chrome, click the icon at the

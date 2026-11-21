@@ -170,6 +170,7 @@ input:focus,select:focus{outline:2px solid var(--primary);outline-offset:1px}
 .mic:hover{background:var(--primary-dark);transform:scale(1.03)}
 .mic.listening{background:#173fa4;animation:pulseMic 1s infinite}
 .mic.err{background:var(--danger)}
+.mic.await-tap{animation:pulseMic 1.6s infinite}
 .mic[disabled]{opacity:.55;cursor:not-allowed}
 @keyframes pulseMic{50%{box-shadow:0 0 0 16px rgba(36,87,214,.12),0 12px 28px rgba(36,87,214,.28)}}
 .clock{position:absolute;bottom:-2px;right:2px;background:var(--card);border:1px solid var(--line);border-radius:999px;
@@ -1572,7 +1573,21 @@ function markVoiceBroken(msg){
   if(b){ b.innerHTML = `<span>🎙️</span><div><b>Voice isn't working in this browser.</b> ${esc(msg)}</div>`; b.classList.remove("hide"); }
   $("keypadWrap") && $("keypadWrap").classList.add("open");
 }
-const voice = { rec:null, active:false, target:null, gotResult:false, gotError:false };
+const voice = { rec:null, active:false, target:null, gotResult:false, gotError:false,
+                sawAudio:false, attempt:0, freeAt:0, pending:null, watchdog:null };
+/* Apple releases the audio session lazily. Start a new recognition while the
+   previous one — or the spoken question — still holds it, and you get a session
+   that never opens the microphone and never reports anything: no result, no
+   error, no end. That is a voice answer working once on an iPhone and then going
+   quiet for every question after it.
+
+   So nothing starts until the engine is free, a session that fails to open the
+   microphone is retried once, and if that fails too the student is asked to tap
+   — a tap is user activation, which iOS does honour. */
+const ENGINE_GAP = isIOS ? 450 : 80;          // ms to let the audio session unwind
+const DEAD_MS    = 1500;                      // no audio by now: the mic never opened
+let voiceTapOnly = false;                     // hands-free restart refused here
+const engineBusy = ms => { voice.freeAt = Math.max(voice.freeAt, Date.now() + (ms == null ? ENGINE_GAP : ms)); };
 function setVoiceChip(state, text){
   [["voiceDot","voiceStatus"],["authDot","authVoice"]].forEach(([d,s]) => {
     const dot = document.getElementById(d), lab = document.getElementById(s);
@@ -1580,17 +1595,42 @@ function setVoiceChip(state, text){
     if(lab) lab.textContent = text;
   });
 }
-function startListening(handlers){
+/* `gesture` means this start is the direct result of a tap or a key press. Those
+   run synchronously, because a timer would spend the user activation that iOS
+   needs — everything else waits its turn. */
+function startListening(handlers, gesture){
   if(!SR){ handlers.onError && handlers.onError("unsupported"); return false; }
   if(!isSecure){ handlers.onError && handlers.onError("insecure"); return false; }
   stopListening();
   voice.target = handlers;
-  voice.gotResult = false; voice.gotError = false;
+  voice.gotResult = false; voice.gotError = false; voice.attempt = 0;
+  gesture ? openSession() : queueSession();
+  return true;
+}
+function queueSession(){
+  clearTimeout(voice.pending);
+  voice.pending = setTimeout(openSession, Math.max(0, voice.freeAt - Date.now()));
+}
+function detach(r){
+  try {
+    r.onstart = r.onend = r.onresult = r.onerror = null;
+    r.onaudiostart = r.onsoundstart = r.onspeechstart = null;
+  } catch(e){}
+}
+function openSession(){
+  const handlers = voice.target;
+  if(!handlers) return;
+  voice.attempt++; voice.sawAudio = false;
   const r = new SR();
   r.lang = cfg().lang || "en-AU";
   r.continuous = false; r.interimResults = true; r.maxAlternatives = 6;
+  /* The microphone being open is the only proof the session is real: a dead one
+     fires none of these. */
+  const alive = () => { voice.sawAudio = true; clearTimeout(voice.watchdog); };
   r.onstart = () => setVoiceChip("listening", "Listening in Australian English…");
+  r.onaudiostart = alive; r.onsoundstart = alive; r.onspeechstart = alive;
   r.onresult = ev => {
+    alive();
     let interim = "";
     for(let i = ev.resultIndex; i < ev.results.length; i++){
       const res = ev.results[i];
@@ -1598,28 +1638,55 @@ function startListening(handlers){
         const alts = [];
         for(let k=0;k<res.length;k++) alts.push(res[k].transcript);
         voice.gotResult = true;
-        voice.target && voice.target.onResult && voice.target.onResult(alts);
+        handlers.onResult && handlers.onResult(alts);
         return;
       }
       interim += res[0].transcript;
     }
-    if(interim){ voice.gotResult = true; if(voice.target && voice.target.onInterim) voice.target.onInterim(interim); }
+    if(interim){ voice.gotResult = true; handlers.onInterim && handlers.onInterim(interim); }
   };
-  r.onerror = ev => { voice.gotError = true; voice.target && voice.target.onError && voice.target.onError(ev.error); };
+  r.onerror = ev => {
+    voice.gotError = true; clearTimeout(voice.watchdog); engineBusy();
+    handlers.onError && handlers.onError(ev.error);
+  };
   r.onend = () => {
-    voice.active = false;
+    voice.active = false; engineBusy();
+    if(voice.rec === r && !voice.sawAudio && !voice.gotResult && !voice.gotError){
+      clearTimeout(voice.watchdog);
+      retryOrTap();                        // ended without the microphone ever opening
+      return;
+    }
     if(!voiceDeclaredBroken) setVoiceChip("ready", langLabel() + " voice recognition ready");
-    voice.target && voice.target.onEnd && voice.target.onEnd();
+    handlers.onEnd && handlers.onEnd();
   };
   voice.rec = r;
-  try { r.start(); voice.active = true; return true; }
-  catch(e){ voice.active = false; handlers.onError && handlers.onError("busy"); return false; }
+  try { r.start(); voice.active = true; }
+  catch(e){ voice.active = false; engineBusy(600); retryOrTap(); return; }
+  voice.watchdog = setTimeout(() => {
+    if(voice.rec !== r || voice.sawAudio || voice.gotResult || voice.gotError) return;
+    detach(r); try { r.abort(); } catch(e){}
+    voice.active = false; engineBusy(700);
+    retryOrTap();
+  }, DEAD_MS);
+}
+/* One silent session can be timing. Two means hands-free is not going to work on
+   this device, so stop pretending it will and ask for a tap. */
+function retryOrTap(){
+  const h = voice.target;
+  if(h && voice.attempt < 2){ engineBusy(900); queueSession(); return; }   // longer gap this time
+  voice.rec = null; voice.target = null; voice.active = false;
+  if(!voiceDeclaredBroken) setVoiceChip("ready", langLabel() + " voice recognition ready");
+  h && h.onDead && h.onDead();
 }
 function stopListening(){
-  if(!voice.rec) return;
+  clearTimeout(voice.pending); clearTimeout(voice.watchdog);
+  voice.pending = null; voice.watchdog = null;
+  if(!voice.rec){ voice.target = null; return; }
   const r = voice.rec;
   voice.rec = null; voice.target = null; voice.active = false;
-  try { r.onend = null; r.onresult = null; r.onerror = null; r.abort(); } catch(e){}
+  engineBusy();
+  detach(r);
+  try { r.abort(); } catch(e){}
 }
 function langLabel(){
   return ({ "en-AU":"Australian English", "en-NZ":"New Zealand English", "en-GB":"British English", "en-US":"US English" })[cfg().lang] || "English";
@@ -1652,6 +1719,9 @@ function speak(text, done){
     if(fired) return;
     fired = true;
     clearInterval(poll); clearTimeout(hardStop);
+    /* Speaking held the audio session. Recognition has to wait for it to let go,
+       or on iOS it opens a session that hears nothing. */
+    engineBusy();
     done && done();
   };
   const busy = () => {
@@ -2088,7 +2158,7 @@ document.addEventListener("keydown", e => {
     if(/^[0-9]$/.test(e.key)){ playKey(e.key); $("keypadWrap").classList.add("open"); e.preventDefault(); }
     else if(e.key === "Backspace"){ playKey("clear"); e.preventDefault(); }
     else if(e.key === "Enter" && typedBuf.play){ playKey("enter"); e.preventDefault(); }
-    else if(e.key === " "){ play.listen(); e.preventDefault(); }
+    else if(e.key === " "){ play.listen(true); e.preventDefault(); }
     return;
   }
   if(!$("authView").classList.contains("hide") && signinStudentId && !$("siPinWrap").classList.contains("hide")){
@@ -2222,9 +2292,9 @@ const play = {
     $("feedback").textContent = ""; $("feedback").className = "feedback";
     $("transcript").textContent = "";
     $("micBtn").disabled = false;
-    $("micBtn").classList.remove("listening","err");
+    $("micBtn").classList.remove("listening","err","await-tap");
     this.renderStage();
-    const go = () => { if(play.awaiting && P().prefs.autoListen) play.listen(); };
+    const go = () => play.beginListening();
     P().prefs.speak ? speak(spokenQuestion(this.q), go) : go();
   },
   /* ---------- practice ---------- */
@@ -2237,9 +2307,9 @@ const play = {
     $("feedback").textContent = ""; $("feedback").className = "feedback";
     $("transcript").textContent = "";
     $("micBtn").disabled = false;
-    $("micBtn").classList.remove("listening","err");
+    $("micBtn").classList.remove("listening","err","await-tap");
     this.renderStage();
-    const go = () => { if(play.awaiting && P().prefs.autoListen) play.listen(); };
+    const go = () => play.beginListening();
     P().prefs.speak ? speak(spokenQuestion(this.q), go) : go();
   },
   /* ---------- test ---------- */
@@ -2278,12 +2348,12 @@ const play = {
     $("feedback").textContent = ""; $("feedback").className = "feedback";
     $("transcript").textContent = "";
     $("micBtn").disabled = false;
-    $("micBtn").classList.remove("listening","err");
+    $("micBtn").classList.remove("listening","err","await-tap");
     this.renderStage();
     const go = () => {
       if(!play.awaiting || play.mode !== "test") return;
       startTimer(cfg().testSeconds, () => play.timeout());
-      if(P().prefs.autoListen) play.listen();
+      play.beginListening();
     };
     P().prefs.speak ? speak(spokenQuestion(this.q), go) : go();
   },
@@ -2295,8 +2365,28 @@ const play = {
     $("transcript").innerHTML = `<b>Time's up</b> — ${cfg().testSeconds} seconds`;
     this.finishAnswer(null, "—", "timeout", false);
   },
-  listen(){
+  /* Called once a question is on screen. */
+  beginListening(){
+    if(!this.awaiting || !P().prefs.autoListen) return;
+    if(voiceTapOnly){ this.needTap(); return; }
+    this.listen(false);
+  },
+  /* Hands-free is not happening on this device. Say so once, then ask for a tap
+     before every question — the student can still answer by voice, and the
+     keypad is where it always was. */
+  needTap(){
+    $("micBtn").classList.remove("listening");
+    if(!voiceTapOnly){
+      voiceTapOnly = true;
+      setVoiceChip("ready", "Tap the microphone for each answer");
+    }
     if(!this.awaiting) return;
+    $("micBtn").classList.add("await-tap");
+    $("transcript").innerHTML = "<b>Tap the microphone</b> and say your answer.";
+  },
+  listen(gesture){
+    if(!this.awaiting) return;
+    $("micBtn").classList.remove("await-tap");
     $("micBtn").classList.add("listening");
     const target = this.q.answer;
     const ok = startListening({
@@ -2312,11 +2402,12 @@ const play = {
         play.submit(j.value, j.said, "voice");
       },
       onError: err => { if(err !== "no-speech") silentRounds = 0; play.micError(err); },
+      onDead: () => play.needTap(),
       onEnd: () => {
         $("micBtn").classList.remove("listening");
-        if(voice.gotResult === false && voice.gotError === false){
-          // started and ended without a result or an error: the hallmark of a
-          // browser that pretends to support recognition
+        if(voice.sawAudio && voice.gotResult === false && voice.gotError === false){
+          // the microphone opened, listened, and returned neither a result nor an
+          // error: the hallmark of a browser that pretends to support recognition
           if(++silentRounds >= 2){
             markVoiceBroken(isEdge
               ? "Microsoft Edge starts listening but never returns an answer. Use Chrome or Safari, or keep using the keypad."
@@ -2324,7 +2415,7 @@ const play = {
           }
         }
       }
-    });
+    }, gesture);
     if(!ok) $("micBtn").classList.remove("listening");
   },
   micError(err){
@@ -3136,8 +3227,8 @@ function wire(){
       [ { label:"Start the test", cls:"primary", fn:() => play.setMode("test") },
         { label:"Keep practising" } ]);
   };
-  $("micBtn").onclick  = () => play.listen();
-  $("btnRetry").onclick = () => play.listen();
+  $("micBtn").onclick  = () => play.listen(true);
+  $("btnRetry").onclick = () => play.listen(true);
   $("btnRepeat").onclick = () => { if(play.q) speak(spokenQuestion(play.q)); };
   $("btnKeypad").onclick = () => $("keypadWrap").classList.toggle("open");
   $("btnSkip").onclick = () => {
@@ -3296,6 +3387,7 @@ window.MMM = {
   Store, LocalAdapter, ServerAdapter, migrate, blankProgress, isIOS, isIOSSafari,
   testLock, formatWait, browserVoiceVerdict, curfewState, curfewNow, zonedMinutes, sydneyMinutes,
   sydneyOffsetHours, hourLabel, checkCurfew, curfewAppliesTo, pinExpired, pinDaysLeft, pinAgeDays, applyNewPin, pinReused, validName, studentNameTaken, teacherNameTaken, levelOfTable,
+  startListening, stopListening, voice, tapOnly: () => voiceTapOnly, ENGINE_GAP,
   session: () => session, db: () => Store.db, play, timer
 };
 window.TTQ = window.MMM;                      // old name, kept so existing bookmarks keep working
